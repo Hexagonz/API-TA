@@ -12,10 +12,10 @@ export default class Security {
     key: string | undefined = process.env.CRYPTO_KEY
 
     encrypt( plaintext: string ): string | undefined {
+        let encrypt: string |undefined;
         try {
             const iv = crypto.randomBytes( 16 );
             const cipher = crypto.createCipheriv( 'aes-256-cbc', this.key as string, iv );
-
             const encrypted = Buffer.concat( [
                 cipher.update(
                     plaintext, 'utf-8'
@@ -23,11 +23,12 @@ export default class Security {
                 cipher.final(),
             ] );
 
-            return iv.toString( this.encoding ) + encrypted.toString( this.encoding );
+            encrypt = iv.toString( this.encoding ) + encrypted.toString( this.encoding );
 
         } catch (e) {
             console.error( e );
         }
+        return encrypt;
     };
 
     decrypt( cipherText: string ) : string | undefined {
@@ -35,7 +36,7 @@ export default class Security {
             encryptedDataString,
             ivString,
         } = splitEncryptedText( cipherText );
-
+        let decrypt: string | undefined;
         try {
             const iv = Buffer.from( ivString, this.encoding );
             const encryptedText = Buffer.from( encryptedDataString, this.encoding );
@@ -43,10 +44,10 @@ export default class Security {
             const decipher = crypto.createDecipheriv( 'aes-256-cbc', this.key as string, iv );
 
             const decrypted = decipher.update( encryptedText );
-            return Buffer.concat( [ decrypted, decipher.final() ] ).toString();
+            decrypt = Buffer.concat( [ decrypted, decipher.final() ] ).toString();
         } catch (e) {
             console.error( e );
         }
-        return 'Error...';
+        return decrypt;
     }
 }
