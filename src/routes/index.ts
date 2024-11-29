@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import path from 'path';
 import sweggerSpec from '../public/listen';
 import swaggerUi from 'swagger-ui-express';
+import cookieParser from 'cookie-parser';
 
 const app: Application = express();
 const port: number | string = process.env.PORT || 3000;
@@ -20,8 +21,9 @@ files.filter(async(file) => {
         import(filePath).then((controllerModule) => {
             const controller = new controllerModule.default();
             app.use(express.urlencoded({ extended: true }));
+            app.use(cookieParser());
             app.use(express.json());
-            app.use(file !== DEFAULT ? '/api' : '', controller.router);
+            app.use(file !== DEFAULT ? '/api/v1/' : '', controller.router);
             app.use(
                 "/api/public/docs",
                 swaggerUi.serve as unknown as RequestHandler,

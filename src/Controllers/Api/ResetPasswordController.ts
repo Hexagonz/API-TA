@@ -29,7 +29,7 @@ class ResetPasswordController extends AuthMiddleWare  {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
-                succses: false,
+                status: false,
                 message: errors.array()[0].msg
             });
             return;

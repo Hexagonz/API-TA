@@ -13,7 +13,7 @@ class DefaultUrlController {
     }
 
     private defaultRouter(req: Request, res: Response): void {
-        res.status(200).send("Request: /api <br/> Documentation: /api/public/docs");
+        res.status(200).send("Request: /api/v1/ <br/> Documentation: /api/public/docs");
     }
 }
 

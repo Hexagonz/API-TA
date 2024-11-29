@@ -1,7 +1,5 @@
 import { Request, Response, Router } from "express";
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
-import fs from 'fs';
 
 const router: Router = Router(); 
 class AccsesResourceController extends AuthMiddleWare {
@@ -16,7 +14,7 @@ class AccsesResourceController extends AuthMiddleWare {
     }
 
     private async accses(req: Request, res: Response) {
-        res.json('asamsas');
+        res.json('Test Middleware');
     }
 }
 

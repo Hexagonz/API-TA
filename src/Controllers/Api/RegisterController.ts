@@ -33,7 +33,7 @@ class RegisterController extends PrismaClient {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(422).json({
-                succses: false,
+                status: false,
                 message: errors.array()[0].msg
             });
             return;
@@ -57,7 +57,7 @@ class RegisterController extends PrismaClient {
 
 
                 res.status(201).json({
-                    success: true,
+                    status: true,
                     data: this.users,
                     message: 'User created successfully...',
                 })

@@ -4,7 +4,6 @@ import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
-import { console } from "inspector";
 
 class LoginController extends PrismaClient {
     public router: Router;
@@ -13,7 +12,6 @@ class LoginController extends PrismaClient {
         super();
         this.router = Router();
         this.initializeRoutes();
-    
     }
 
     private initializeRoutes() {
@@ -25,7 +23,7 @@ class LoginController extends PrismaClient {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
-                succses: false,
+                status: false,
                 message: errors.array()[0].msg
             });
             return;
@@ -36,7 +34,7 @@ class LoginController extends PrismaClient {
             existingUser = await this.user.findUnique({
                 where: {
                     email,
-                  },
+                },
             });
         } catch {
             const error =
@@ -50,20 +48,21 @@ class LoginController extends PrismaClient {
                 success: false,
                 message: 'Username atau Password Salah'
             });
-            return next();
+            return;
         }
-        console.log(existingUser)
         let comparePassword = bcrypt.compareSync(password, existingUser?.password);
         if (!comparePassword) {
             res.status(422).json({
-                success: false,
+                status: false,
                 message: 'Username atau Password Salah'
             });
-            return next();
+            return;
         }
 
         let token;
-        const privateKey = fs.readFileSync('private.key','utf-8');
+        let refreshToken;
+        const privateKey = fs.readFileSync('private.key', 'utf-8');
+        const refreshKey = fs.readFileSync('privateRefresh.pem');
         try {
             token = jwt.sign
                 (
@@ -73,18 +72,42 @@ class LoginController extends PrismaClient {
                         email: existingUser?.email
                     },
                     privateKey,
-                    { expiresIn: "1h",  algorithm: 'RS256'  },
-                    
+                    { expiresIn: "10m", algorithm: 'RS256' },
+
                 );
+
+            refreshToken = jwt.sign({
+                userId: existingUser?.id,
+                username: existingUser?.name,
+                email: existingUser?.email
+            }, refreshKey, { expiresIn: '1d', algorithm: 'ES256' }
+            );
+
+            await this.refresh_Token.create({
+                data: {
+                    userId: existingUser.id,
+                    token: refreshToken,
+                    expiresAt: new Date(Date.now() +  24 * 60 * 60 * 1000)
+                }
+            });
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                sameSite: process.env.NODE_ENV === 'production',
+                secure: true,
+                maxAge: 24 * 60 * 60 * 1000
+            }
+            );
         } catch (err) {
             res.status(401).json({
-                success: false,
+                status: false,
                 message: 'Unauthorized gagal membuat token'
             });
-            return next();
+            return;
         }
+
         res.status(201).json({
-            success: true,
+            status: true,
             data: {
                 userId: existingUser.id,
                 email: existingUser.email,

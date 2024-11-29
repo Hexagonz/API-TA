@@ -3,7 +3,11 @@
  * tags:
  *   name: Auth
  *   description: The auth managing API
- * /api/register:
+ */
+
+/**
+ * @swagger
+ * /api/v1/register:
  *   post:
  *     summary: Create a new user
  *     tags: [Auth]
@@ -22,8 +26,11 @@
  *               $ref: '#/components/schemas/ResponseRegister'
  *       500:
  *         description: Some server error
- *
- * /api/login:
+ */
+
+/**
+ * @swagger
+ * /api/v1/login:
  *   post:
  *     summary: Login user
  *     tags: [Auth]
@@ -42,8 +49,11 @@
  *               $ref: '#/components/schemas/ResponseLogin'
  *       500:
  *         description: Some server error
- * 
- * /api/reset-password:
+ */
+
+/**
+ * @swagger
+ * /api/v1/reset-password:
  *   post:
  *     summary: Reset Password user
  *     tags: [Auth]
@@ -64,6 +74,63 @@
  *         description: Some server error
  */
 
+
+/**
+ * @swagger
+ * /api/v1/request-reset-password:
+ *   post:
+ *     summary: Request Token Reset Password
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseResetPasswordRequest'
+ *       500:
+ *         description: Some server error
+ *     security:
+ *       - BearerAuth: []
+ */
+
+/**
+ * @swagger
+ * /api/v1/refresh:
+ *   post:
+ *     summary: Refresh Accses Token User
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseRefreshToken'
+ *       500:
+ *         description: Some server error
+ *     security:
+ *       - BearerAuth: []
+ */
+
+/**
+ * @swagger
+ * /api/v1/logout:
+ *   post:
+ *     summary: Logout User
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseLogout'
+ *       500:
+ *         description: Some server error
+ *     security:
+ *       - BearerAuth: []
+ */
 
 
 /**
@@ -141,7 +208,6 @@
  *         password: password123
  */
 
-
 /**
  * @swagger
  * components:
@@ -153,7 +219,7 @@
  *         - data
  *         - message
  *       properties:
- *         success:
+ *         status:
  *           type: boolean
  *           description: Indicates whether the request was successful
  *         data:
@@ -171,7 +237,7 @@
  *         message:
  *           type: string
  *       example:
- *         success: true
+ *         status: true
  *         data:
  *           id: "1"
  *           name: John Doe
@@ -191,7 +257,7 @@
  *         - data
  *         - message
  *       properties:
- *         success:
+ *         status:
  *           type: boolean
  *           description: Indicates whether the request was successful
  *         data:
@@ -211,7 +277,7 @@
  *         message:
  *           type: string
  *       example:
- *         success: true
+ *         status: true
  *         data:
  *           id: "1"
  *           name: John Doe
@@ -232,7 +298,7 @@
  *         - data
  *         - message
  *       properties:
- *         success:
+ *         status:
  *           type: boolean
  *           description: Indicates whether the request was successful
  *         data:
@@ -250,11 +316,87 @@
  *         message:
  *           type: string
  *       example:
- *         success: true
+ *         status: true
  *         data:
  *           id: "1"
  *           email: johndoe@email.com
  *           password: hashedPassword#
  *           token: resetPasswordToken#
- *         message: Succses Resset Password User...
+ *         message: Success Reset Password User...
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ResponseResetPasswordRequest:
+ *       type: object
+ *       required:
+ *         - success
+ *         - data
+ *         - message
+ *       properties:
+ *         status:
+ *           type: boolean
+ *           description: Indicates whether the request was successful
+ *         data:
+ *           type: object
+ *           properties:
+ *             token:
+ *               type: string
+ *         message:
+ *           type: string
+ *       example:
+ *         status: true
+ *         data:
+ *           token: resetPasswordToken#
+ *         message: Success Created Password reset token...
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ResponseRefreshToken:
+ *       type: object
+ *       required:
+ *         - success
+ *         - data
+ *         - message
+ *       properties:
+ *         status:
+ *           type: boolean
+ *           description: Indicates whether the request was successful
+ *         data:
+ *           type: object
+ *           properties:
+ *             token:
+ *               type: string
+ *         message:
+ *           type: string
+ *       example:
+ *         status: true
+ *         data:
+ *           accses_token: resetPasswordToken#
+ *         message: Success Created Refresh Token...
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ResponseLogout:
+ *       type: object
+ *       required:
+ *         - success
+ *         - message
+ *       properties:
+ *         status:
+ *           type: boolean
+ *           description: Indicates whether the request was successful
+ *         message:
+ *           type: string
+ *       example:
+ *         status: true
+ *         message: Logged out successfully...
  */
