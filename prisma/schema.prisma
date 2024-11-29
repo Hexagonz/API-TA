@@ -27,10 +27,10 @@ model User {
 }
 
 model Refresh_Token {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  token     String
+  id        Int       @id @default(autoincrement())
+  userId    Int?      @unique
+  user      User?     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  token     String    @db.VarChar(255) 
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

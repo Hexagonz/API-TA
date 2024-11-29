@@ -1,7 +1,7 @@
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
 import { NextFunction, Request, Response, Router } from "express";
 import { check, ValidationChain, validationResult } from "express-validator";
-import jwt, { JsonWebTokenError, JwtPayload } from "jsonwebtoken";
+import jwt,{ JwtPayload } from "jsonwebtoken";
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { Prisma } from "@prisma/client";

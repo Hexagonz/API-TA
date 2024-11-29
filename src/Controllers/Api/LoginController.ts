@@ -83,13 +83,20 @@ class LoginController extends PrismaClient {
             }, refreshKey, { expiresIn: '1d', algorithm: 'ES256' }
             );
 
-            await this.refresh_Token.create({
-                data: {
+            await this.refresh_Token.upsert({
+                where: { userId: existingUser.id },
+                update: {
+                    token: refreshToken,
+                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                    updatedAt: new Date(),
+                },
+                create: {
                     userId: existingUser.id,
                     token: refreshToken,
-                    expiresAt: new Date(Date.now() +  24 * 60 * 60 * 1000)
-                }
+                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                },
             });
+
 
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
@@ -99,6 +106,7 @@ class LoginController extends PrismaClient {
             }
             );
         } catch (err) {
+            console.log(err)
             res.status(401).json({
                 status: false,
                 message: 'Unauthorized gagal membuat token'
