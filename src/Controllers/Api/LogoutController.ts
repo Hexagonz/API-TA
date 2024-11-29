@@ -10,6 +10,7 @@ class LogoutController extends AuthMiddleWare {
         super(router);
         this.initializeRoutes();
     }
+    private refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
 
     private initializeRoutes(): void {
         this.protectedRouter.post("/logout", this.logout.bind(this));
@@ -27,11 +28,9 @@ class LogoutController extends AuthMiddleWare {
         }
 
         try {
-            // Verifikasi refresh token
-            const refreshKey = fs.readFileSync("publicRefresh.pem", "utf-8"); // Pastikan file publicRefresh.pem ada dan dapat diakses
-            const decodedToken = jwt.verify(refreshToken, refreshKey) as JwtPayload;
-    
-            // Pastikan token valid dan memiliki userId
+            
+            const decodedToken = jwt.verify(refreshToken, this.refreshKey) as JwtPayload;
+
             if (!decodedToken?.userId) {
                 res.status(403).json({ 
                     status: false,

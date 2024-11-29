@@ -5,7 +5,6 @@ import jwt,{ JwtPayload } from "jsonwebtoken";
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { Prisma } from "@prisma/client";
-import Security from "@/utils/security";
 
 const router: Router = Router();
 
@@ -19,6 +18,8 @@ class ResetPasswordController extends AuthMiddleWare  {
         };
         this.initializeRoutes();
     }
+
+    private publicKey = fs.readFileSync('./lib/public.key','utf-8');
 
     private initializeRoutes(): void {
         this.protectedRouter.post("/reset-password", this.validator(), this.resetPassword.bind(this));
@@ -36,7 +37,8 @@ class ResetPasswordController extends AuthMiddleWare  {
             return;
         }
         try {
-            const passwordToken = jwt.verify(token, fs.readFileSync('./src/Controllers/Api/key-password/public.key','utf-8')) as JwtPayload;
+            const decToken = this.security.decrypt(token) as string;
+            const passwordToken = jwt.verify(decToken, fs.readFileSync('./lib/key-password/public.key','utf-8')) as JwtPayload;
             const salt = bcrypt.genSaltSync(10);
             const hash = bcrypt.hashSync(password, salt);
             this.users = {
@@ -66,10 +68,9 @@ class ResetPasswordController extends AuthMiddleWare  {
     private async requestResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
         let token = req.headers.authorization?.split(" ")[1];
         token = this.security.decrypt(token as string);
-        const publicKey = fs.readFileSync('public.key','utf-8');
         let reqToken;
         try {
-            const decodedToken = jwt.verify(token as string, publicKey) as JwtPayload;
+            const decodedToken = jwt.verify(token as string, this.publicKey) as JwtPayload;
             reqToken = jwt.sign
                 (
                     {
@@ -77,7 +78,7 @@ class ResetPasswordController extends AuthMiddleWare  {
                         username: decodedToken.username,
                         email: decodedToken.email,
                     },
-                    fs.readFileSync('./src/Controllers/Api/key-password/private.key','utf-8'),
+                    fs.readFileSync('./lib/key-password/private.key','utf-8'),
                     { expiresIn: "1h", algorithm: 'RS256' }
                 );
             res.status(201).json({

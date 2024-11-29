@@ -17,6 +17,10 @@ class LoginController extends PrismaClient {
         this.initializeRoutes();
     }
 
+    private privateKey = fs.readFileSync('./lib/private.key', 'utf-8');
+    
+    private refreshKey = fs.readFileSync('./lib/privateRefresh.pem','utf-8');
+
     private initializeRoutes() {
         this.router.post("/login", this.validator(), this.login.bind(this))
     }
@@ -64,8 +68,6 @@ class LoginController extends PrismaClient {
 
         let token;
         let refreshToken;
-        const privateKey = fs.readFileSync('private.key', 'utf-8');
-        const refreshKey = fs.readFileSync('privateRefresh.pem');
         try {
             token = jwt.sign
                 (
@@ -74,7 +76,7 @@ class LoginController extends PrismaClient {
                         username: existingUser?.name,
                         email: existingUser?.email
                     },
-                    privateKey,
+                    this.privateKey,
                     { expiresIn: "10m", algorithm: 'RS256' },
 
                 );
@@ -83,7 +85,7 @@ class LoginController extends PrismaClient {
                 userId: existingUser?.id,
                 username: existingUser?.name,
                 email: existingUser?.email
-            }, refreshKey, { expiresIn: '1d', algorithm: 'ES256' }
+            }, this.refreshKey, { expiresIn: '1d', algorithm: 'ES256' }
             );
 
             await this.refresh_Token.upsert({
@@ -124,6 +126,7 @@ class LoginController extends PrismaClient {
                 email: existingUser.email,
                 role: existingUser.role,
                 token: encToken,
+                refreshToken: refreshToken
             },
             message: 'Login Succses...'
         });

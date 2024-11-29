@@ -14,75 +14,58 @@ class RefreshTokenController extends AuthMiddleWare {
         this.scheduleTokenCleanup();
     }
 
+    private refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
+
     private initializeRoutes() {
-        this.protectedRouter.post("/refresh", this.refresh);
+        this.router.post("/refresh", this.refresh.bind(this));
     }
 
     private async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const refreshToken = req.cookies?.refreshToken;
-        if (!refreshToken) {
-            res.status(403).json({ 
-                status: false, 
-                message: 'Refresh token not found' 
+        const authorizationHeader = req.headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
+            res.status(403).json({
+                status: false,
+                message: "Refresh token not found in Authorization header",
             });
             return;
         }
     
-        let accessToken = req.headers.authorization?.split(" ")[1];
-        accessToken = this.security.decrypt(accessToken as string);
-        if (!accessToken) {
-            res.status(401).json({ 
-                status: false, 
-                message: 'Access token is missing' 
-            });
-            return;
-        }
+        let refreshToken = authorizationHeader.split(" ")[1];
     
         try {
-            const accessKey = fs.readFileSync("public.key", "utf-8");
-            const refreshKey = fs.readFileSync("publicRefresh.pem", "utf-8");
-
-            const userCredentials = jwt.verify(accessToken, accessKey) as JwtPayload;
-            
-            try {
-                const user = jwt.verify(refreshToken, refreshKey) as JwtPayload;
-                const userId = user.userId;
+            refreshToken = this.security.decrypt(refreshToken) as string;
+            const user = jwt.verify(refreshToken, this.refreshKey) as JwtPayload;
     
-                const newAccessToken = jwt.sign(
-                    {
-                        userId: userCredentials.userId,
-                        username: userCredentials.username,
-                        email: userCredentials.email,
-                    },
-                    refreshKey, {
-                        expiresIn: '10m',
-                    }
-                );
-
-                await this.refresh_Token.deleteMany({
-                    where: { userId },
-                });
+            const userId = user.userId;
     
-                res.json({
-                    status: true, 
-                    data: {
-                        access_token: newAccessToken,
-                    },
-                    message: 'Successfully created new Access Token',
-                });
-            } catch (err) {
-                console.error('Invalid refresh token:', err);
-                res.status(401).json({ 
-                    status: false, 
-                    message: 'Invalid or expired refresh token' 
-                });
-                return;
-            }
+            const accessKey = fs.readFileSync("./lib/private.key", "utf-8");
+            const newAccessToken = jwt.sign(
+                {
+                    userId: user.userId,
+                    username: user.username,
+                    email: user.email,
+                },
+                accessKey,
+                {
+                    expiresIn: "10m",algorithm: 'RS256' 
+                }
+            );
+    
+            await this.refresh_Token.deleteMany({
+                where: { userId },
+            });
+            res.json({
+                status: true,
+                data: {
+                    access_token: this.security.encrypt(newAccessToken),
+                },
+                message: "Successfully created new Access Token",
+            });
         } catch (err) {
-            console.error('Error verifying access token:', err);
-            res.status(401).json({ 
-                status: false, 
-                message: 'Unauthorized access' 
+            console.error("Error processing refresh token:", err);
+            res.status(401).json({
+                status: false,
+                message: "Invalid or expired refresh token",
             });
             return;
         }
