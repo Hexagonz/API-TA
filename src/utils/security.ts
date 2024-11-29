@@ -1,18 +1,14 @@
 import * as crypto from 'crypto';
 
-function splitEncryptedText( encryptedText: string ) {
-    return {
-        ivString: encryptedText.slice( 0, 32 ),
-        encryptedDataString: encryptedText.slice( 32 ),
-    }
-}
 
 export default class Security {
-    encoding: BufferEncoding = 'hex';
-    key: string | undefined = process.env.CRYPTO_KEY
+    
+    private encoding: BufferEncoding = 'hex';
 
-    encrypt( plaintext: string ): string | undefined {
-        let encrypt: string |undefined;
+    private key: string | undefined = process.env.CRYPTO_KEY
+
+    public encrypt( plaintext: string ): string | undefined {
+        let encrypt: string | undefined;
         try {
             const iv = crypto.randomBytes( 16 );
             const cipher = crypto.createCipheriv( 'aes-256-cbc', this.key as string, iv );
@@ -31,11 +27,11 @@ export default class Security {
         return encrypt;
     };
 
-    decrypt( cipherText: string ) : string | undefined {
+    public decrypt( cipherText: string ) : string | undefined {
         const {
             encryptedDataString,
             ivString,
-        } = splitEncryptedText( cipherText );
+        } = this.splitEncryptedText( cipherText );
         let decrypt: string | undefined;
         try {
             const iv = Buffer.from( ivString, this.encoding );
@@ -49,5 +45,15 @@ export default class Security {
             console.error( e );
         }
         return decrypt;
+    }
+
+    public splitEncryptedText( encryptedText: string ): {
+        ivString: string;
+        encryptedDataString: string;
+    } {
+        return {
+            ivString: encryptedText.slice( 0, 32 ),
+            encryptedDataString: encryptedText.slice( 32 ),
+        }
     }
 }
