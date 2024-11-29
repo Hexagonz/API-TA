@@ -5,6 +5,7 @@ import jwt,{ JwtPayload } from "jsonwebtoken";
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { Prisma } from "@prisma/client";
+import Security from "@/utils/security";
 
 const router: Router = Router();
 
@@ -25,7 +26,7 @@ class ResetPasswordController extends AuthMiddleWare  {
     }
 
     private async resetPassword(req: Request<{ password: string, token: string }>, res: Response, next: NextFunction): Promise<void> {
-        const { password, token } = req.body;
+        const { password,token } = req.body;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
@@ -43,7 +44,7 @@ class ResetPasswordController extends AuthMiddleWare  {
                 password: hash
             }; 
             const data = await this.user.update({
-                where: { id: passwordToken.id },
+                where: { email: passwordToken.email },
                 data: this.users
             });
 
@@ -63,7 +64,8 @@ class ResetPasswordController extends AuthMiddleWare  {
     }
 
     private async requestResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const token = req.headers.authorization?.split(" ")[1];
+        let token = req.headers.authorization?.split(" ")[1];
+        token = this.security.decrypt(token as string);
         const publicKey = fs.readFileSync('public.key','utf-8');
         let reqToken;
         try {

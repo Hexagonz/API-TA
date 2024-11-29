@@ -4,12 +4,15 @@ import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
+import Security from "@/utils/security";
 
 class LoginController extends PrismaClient {
     public router: Router;
+    private security: Security;
 
     constructor() {
         super();
+        this.security = new Security();
         this.router = Router();
         this.initializeRoutes();
     }
@@ -97,7 +100,7 @@ class LoginController extends PrismaClient {
                 },
             });
 
-
+            refreshToken = this.security.encrypt(refreshToken);
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 sameSite: process.env.NODE_ENV === 'production',
@@ -113,14 +116,14 @@ class LoginController extends PrismaClient {
             });
             return;
         }
-
+        const encToken = this.security.encrypt(token);
         res.status(201).json({
             status: true,
             data: {
                 userId: existingUser.id,
                 email: existingUser.email,
                 role: existingUser.role,
-                token: token,
+                token: encToken,
             },
             message: 'Login Succses...'
         });

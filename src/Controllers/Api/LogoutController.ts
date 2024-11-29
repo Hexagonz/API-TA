@@ -16,8 +16,8 @@ class LogoutController extends AuthMiddleWare {
     }
 
     private async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const refreshToken = req.cookies?.refreshToken;
-    
+        let refreshToken = req.cookies?.refreshToken;
+        refreshToken =  this.security.decrypt(refreshToken as string);
         if (!refreshToken) {
             res.status(403).json({ 
                 status: false,

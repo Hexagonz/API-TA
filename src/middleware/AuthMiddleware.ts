@@ -3,19 +3,23 @@ import { withMiddleware } from "express-kun";
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client'
+import Security from "@/utils/security";
 
 class AuthMiddleWare extends PrismaClient {
     public router: Router;
     public protectedRouter: Router;
+    protected security: Security;
 
     constructor(router: Router) {
         super();
         this.router = router;
+        this.security = new Security();
         this.protectedRouter = withMiddleware(this.router, this.authMiddleware.bind(this));
     }
 
     public authMiddleware(req: Request, res: Response, next: NextFunction): void {
         const authorization = req.headers.authorization;
+        
         if (!authorization) {
             res.status(401).json({
                 status: false,
@@ -24,8 +28,9 @@ class AuthMiddleWare extends PrismaClient {
             return;
         }
         const token = authorization.split(" ")[1];
+        const decAccses = this.security.decrypt(token as string);
         const publicKey = fs.readFileSync('public.key', 'utf-8');
-        jwt.verify(token, publicKey, function (err) {
+        jwt.verify(decAccses as string, publicKey, function (err) {
             if (err?.message === "invalid token") {
                 res.status(401).json({
                     status: false,
@@ -46,6 +51,11 @@ class AuthMiddleWare extends PrismaClient {
                 res.status(401).json({
                     status: false,
                     message: "Error! Invalid Token signature..."
+                });
+            } else if(err?.message === "invalid algorithm") {
+                res.status(401).json({
+                    status: false,
+                    message: "Error! Invalid Algorithm..."
                 });
             }
             return next(err);
