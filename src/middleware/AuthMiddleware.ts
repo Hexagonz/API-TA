@@ -57,6 +57,11 @@ class AuthMiddleWare extends PrismaClient {
                     status: false,
                     message: "Error! Invalid Algorithm..."
                 });
+            } else if(err?.message === "jwt must be provided") {
+                res.status(401).json({
+                    status: false,
+                    message: "Error! Token must be provided..."
+                });
             }
             return next(err);
         });

@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
-import cron from 'node-cron';
 import fs from 'fs';
 
 const router: Router = Router();
@@ -11,7 +10,6 @@ class RefreshTokenController extends AuthMiddleWare {
     constructor() {
         super(router);
         this.initializeRoutes();
-        this.scheduleTokenCleanup();
     }
 
     private refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
@@ -69,24 +67,7 @@ class RefreshTokenController extends AuthMiddleWare {
             });
             return;
         }
-    }
-    
-
-    private scheduleTokenCleanup(): void {
-        cron.schedule('0 0 * * *', async () => { 
-            try {
-                console.log("Starting token cleanup...");
-                await this.refresh_Token.deleteMany({
-                    where: {
-                        expiresAt: { lt: new Date() } 
-                    }
-                });
-
-                console.log("Token cleanup completed.");
-            } catch (err) {
-                console.error("Error during token cleanup:", err);
-            }
-        });
+        await this.$disconnect();
     }
 }
 export default RefreshTokenController;
