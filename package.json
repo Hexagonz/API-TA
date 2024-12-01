@@ -7,7 +7,8 @@
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/routes/index.ts"
   },
   "prisma": {
-    "seed": "ts-node ./src/Models/prisma/seed.ts"
+    "seed": "ts-node src/Models/prisma/seed.ts",
+    "schema": "src/Models/prisma/schema.prisma"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -21,12 +22,12 @@
     "express": "^4.21.1",
     "express-kun": "^1.0.24",
     "nodemon": "^3.1.7",
-    "prisma": "^5.22.0",
+    "prisma": "^6.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
