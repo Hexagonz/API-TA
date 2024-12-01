@@ -29,7 +29,6 @@ class AuthMiddleWare extends PrismaClient {
         }
         const token = authorization.split(" ")[1];
         const decAccses = this.security.decrypt(token as string);
-        console.log(decAccses);
         const publicKey = fs.readFileSync('./lib/public.key', 'utf-8');
         jwt.verify(decAccses as string, publicKey, function (err) {
             if (err?.message === "invalid token") {

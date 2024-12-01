@@ -1,6 +1,7 @@
 node_modules
 # Keep environment variables out of version control
-prisma/migrations/
+src/Models/prisma/migrations/
+
 .env
 .git
 

@@ -5,14 +5,9 @@ import bcrypt from 'bcryptjs';
 // Inisialisasi Prisma
 const prisma = new PrismaClient();
 
-// Konfigurasi argumen yang diterima
-const options = {
-  environment: 'development'
-};
-
 async function main() {
 
-  const environment = options.environment || 'development'; 
+  const environment = process.env.ENV || 'development'; 
 
   switch (environment) {
     case 'development':
