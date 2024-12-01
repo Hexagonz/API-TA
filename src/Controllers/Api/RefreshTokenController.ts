@@ -12,7 +12,7 @@ class RefreshTokenController extends AuthMiddleWare {
         this.initializeRoutes();
     }
 
-    private refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
+    private readonly refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
 
     private initializeRoutes() {
         this.router.post("/refresh", this.refresh.bind(this));

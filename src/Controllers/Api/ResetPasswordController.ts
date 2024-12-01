@@ -19,7 +19,7 @@ class ResetPasswordController extends AuthMiddleWare  {
         this.initializeRoutes();
     }
 
-    private publicKey = fs.readFileSync('./lib/public.key','utf-8');
+    private readonly publicKey = fs.readFileSync('./lib/public.key','utf-8');
 
     private initializeRoutes(): void {
         this.protectedRouter.post("/reset-password", this.validator(), this.resetPassword.bind(this));

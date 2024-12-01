@@ -17,12 +17,12 @@ class LoginController extends PrismaClient {
         this.initializeRoutes();
     }
 
-    private privateKey = fs.readFileSync('./lib/private.key', 'utf-8');
+    private readonly privateKey = fs.readFileSync('./lib/private.key', 'utf-8');
     
-    private refreshKey = fs.readFileSync('./lib/privateRefresh.pem','utf-8');
+    private readonly refreshKey = fs.readFileSync('./lib/privateRefresh.pem','utf-8');
 
     private initializeRoutes() {
-        this.router.post("/login", this.validator(), this.login.bind(this))
+        this.router.post("/login", this.validator(), this.login.bind(this));
     }
 
     private async login(req: Request<{ email: string; password: string; }>, res: Response, next: NextFunction): Promise<void> {
@@ -125,8 +125,8 @@ class LoginController extends PrismaClient {
                 userId: existingUser.id,
                 email: existingUser.email,
                 role: existingUser.role,
-                token: encToken,
-                refreshToken: refreshToken
+                accses_token: encToken,
+                refresh_token: refreshToken
             },
             message: 'Login Succses...'
         });

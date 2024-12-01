@@ -6,11 +6,13 @@ import fs from 'fs';
 const router = Router();
 
 class LogoutController extends AuthMiddleWare {
+
     constructor() {
         super(router);
         this.initializeRoutes();
     }
-    private refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
+    
+    private readonly refreshKey = fs.readFileSync("./lib/publicRefresh.pem", "utf-8");
 
     private initializeRoutes(): void {
         this.protectedRouter.post("/logout", this.logout.bind(this));
@@ -28,7 +30,6 @@ class LogoutController extends AuthMiddleWare {
         }
 
         try {
-            
             const decodedToken = jwt.verify(refreshToken, this.refreshKey) as JwtPayload;
 
             if (!decodedToken?.userId) {
@@ -38,8 +39,7 @@ class LogoutController extends AuthMiddleWare {
                 });
                 return;
             }
-    
-            // Menghapus refresh token spesifik dari database
+
             const tokenRecord = await this.refresh_Token?.findFirst({
                 where: { token: refreshToken },
             });
@@ -50,8 +50,7 @@ class LogoutController extends AuthMiddleWare {
                 });
             }
 
-            // Bersihkan cookie
-            res.clearCookie('refreshToken', { httpOnly: true, secure: true }); // Pastikan cookie dihapus dengan aman
+            res.clearCookie('refreshToken', { httpOnly: true, secure: true }); 
             res.status(200).json({ 
                 status: true,
                 message: 'Logged out successfully...' 

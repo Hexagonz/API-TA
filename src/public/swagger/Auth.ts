@@ -272,7 +272,9 @@
  *               format: email
  *             password:
  *               type: string
- *             token:
+ *             accses_token:
+ *               type: string
+ *             refresh_token:
  *               type: string
  *         message:
  *           type: string
@@ -283,7 +285,8 @@
  *           name: John Doe
  *           email: johndoe@email.com
  *           password: hashedPassword#
- *           token: token#
+ *           accses_token: accsestToken#
+ *           refresh_token: refreshToken#
  *         message: Login successfully...
  */
 
@@ -377,8 +380,8 @@
  *       example:
  *         status: true
  *         data:
- *           accses_token: resetPasswordToken#
- *         message: Success Created Refresh Token...
+ *           accses_token: accsesToken#
+ *         message: Success Created Accses Token...
  */
 
 /**
@@ -393,7 +396,7 @@
  *       properties:
  *         status:
  *           type: boolean
- *           description: Indicates whether the request was successful
+ *           description: Indicates whether the request was successfull
  *         message:
  *           type: string
  *       example:

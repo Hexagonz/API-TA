@@ -1,9 +1,10 @@
 import cron from 'node-cron';
-import LoginController from '@controllers/LoginController';
-
-const prisma = new LoginController();
+import { PrismaClient } from '@prisma/client';
+import checkConnection from '@/Models/connection';
+const prisma = new PrismaClient();
 
 export function scheduleTokenCleanup(): void {
+    (async() => await checkConnection(prisma))(); 
     cron.schedule('0 0 * * *', async () => { 
         try {
             console.log("Starting token cleanup...");

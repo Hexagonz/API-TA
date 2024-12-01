@@ -20,7 +20,7 @@ class RegisterController extends PrismaClient {
     }
 
     private initializeRoutes() {
-        this.router.post("/register", this.validator(), this.register.bind(this))
+        this.router.post("/register", this.validator(), this.register.bind(this));
     }
 
     private async register(req: Request<{

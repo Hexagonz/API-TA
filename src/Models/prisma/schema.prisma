@@ -15,13 +15,13 @@ datasource db {
 
 
 model User {
-  id Int @id @default(autoincrement())
-  name String 
-  email String @unique
-  role Role @default(admin)
-  password String
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  email      String   @unique
+  role       Role     @default(admin)
+  password   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   refreshTokens Refresh_Token[] 
 }
@@ -32,8 +32,8 @@ model Refresh_Token {
   user      User?     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   token     String    @db.VarChar(255) 
   expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 enum Role {
