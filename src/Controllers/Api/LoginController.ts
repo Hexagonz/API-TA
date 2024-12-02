@@ -77,7 +77,7 @@ class LoginController extends PrismaClient {
                         email: existingUser?.email
                     },
                     this.privateKey,
-                    { expiresIn: "10m", algorithm: 'RS256' },
+                    { expiresIn: "1m", algorithm: 'RS256' },
 
                 );
 
@@ -85,19 +85,19 @@ class LoginController extends PrismaClient {
                 userId: existingUser?.id,
                 username: existingUser?.name,
                 email: existingUser?.email
-            }, this.refreshKey, { expiresIn: '1d', algorithm: 'ES256' }
+            }, this.refreshKey, { expiresIn: '5m', algorithm: 'ES256' }
             );
 
             await this.refresh_Token.upsert({
                 where: { userId: existingUser.id },
                 update: {
-                    token: refreshToken,
+                    token: this.security.encrypt(refreshToken),
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                     updatedAt: new Date(),
                 },
                 create: {
                     userId: existingUser.id,
-                    token: refreshToken,
+                    token: this.security.encrypt(refreshToken) as string,
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                 },
             });

@@ -11,6 +11,7 @@ const app: Application = express();
 const port: number | string = process.env.PORT_SERVER || 3000;
 const host: string = process.env.HOST || 'http://localhost';
 const DEFAULT: string = 'DefaultUrlController.ts';
+
 const controllersFolder = path.join(__dirname, '../Controllers/Api');
 const files = fs.readdirSync(controllersFolder);
 
