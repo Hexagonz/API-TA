@@ -18,8 +18,8 @@ class LoginController extends PrismaClient {
     }
 
     private readonly privateKey = fs.readFileSync('./lib/private.key', 'utf-8');
-    
-    private readonly refreshKey = fs.readFileSync('./lib/privateRefresh.pem','utf-8');
+
+    private readonly refreshKey = fs.readFileSync('./lib/privateRefresh.pem', 'utf-8');
 
     private initializeRoutes() {
         this.router.post("/login", this.validator(), this.login.bind(this));
@@ -28,10 +28,21 @@ class LoginController extends PrismaClient {
     private async login(req: Request<{ email: string; password: string; }>, res: Response, next: NextFunction): Promise<void> {
         const { email, password } = req.body;
         const errors = validationResult(req);
+
         if (!errors.isEmpty()) {
+            const validationErrors: Array<{ param: string; msg: string }> = errors
+                .array()
+                .map((error) => ({
+                    param: (error as any).path,
+                    msg: (error as any).msg,
+                }));
+
             res.status(400).json({
                 status: false,
-                message: errors.array()[0].msg
+                errors: validationErrors.map((err) => ({
+                    field: err.param,
+                    message: err.msg,
+                })),
             });
             return;
         }
@@ -68,6 +79,7 @@ class LoginController extends PrismaClient {
 
         let token;
         let refreshToken;
+
         try {
             token = jwt.sign
                 (
@@ -85,24 +97,22 @@ class LoginController extends PrismaClient {
                 userId: existingUser?.id,
                 username: existingUser?.name,
                 email: existingUser?.email
-            }, this.refreshKey, { expiresIn: '5m', algorithm: 'ES256' }
+            }, this.refreshKey, { expiresIn: '1h', algorithm: 'ES256' }
             );
-
+            refreshToken = this.security.encrypt(refreshToken);
             await this.refresh_Token.upsert({
                 where: { userId: existingUser.id },
                 update: {
-                    token: this.security.encrypt(refreshToken),
+                    token: refreshToken,
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                     updatedAt: new Date(),
                 },
                 create: {
                     userId: existingUser.id,
-                    token: this.security.encrypt(refreshToken) as string,
+                    token: refreshToken as string,
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                 },
             });
-
-            refreshToken = this.security.encrypt(refreshToken);
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 sameSite: process.env.NODE_ENV === 'production',

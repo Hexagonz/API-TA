@@ -32,9 +32,19 @@ class RegisterController extends PrismaClient {
         const { username, email, password, role } = req.body;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            res.status(422).json({
+            const validationErrors: Array<{ param: string; msg: string }> = errors
+                .array()
+                .map((error) => ({
+                    param: (error as any).path,
+                    msg: (error as any).msg,
+                }));
+
+            res.status(400).json({
                 status: false,
-                message: errors.array()[0].msg
+                errors: validationErrors.map((err) => ({
+                    field: err.param,
+                    message: err.msg,
+                })),
             });
             return;
         }
@@ -43,7 +53,7 @@ class RegisterController extends PrismaClient {
             let existingUser = await this.user.findUnique({
                 where: {
                     email,
-                  },
+                },
             });
 
             if (!existingUser) {
@@ -51,9 +61,9 @@ class RegisterController extends PrismaClient {
                 const hash = bcrypt.hashSync(password, salt);
 
                 this.users = {
-                    name:username, email, password: hash, role
+                    name: username, email, password: hash, role
                 }
-                await this.user.create({data: this.users})
+                await this.user.create({ data: this.users })
 
 
                 res.status(201).json({
@@ -91,7 +101,7 @@ class RegisterController extends PrismaClient {
             check('username')
                 .notEmpty().withMessage('field username cannot be empty!'),
 
-                check('role')
+            check('role')
                 .notEmpty().withMessage('Field role cannot be empty!')
                 .isIn(['admin', 'mahasiswa', 'dosen']).withMessage('Invalid role value!'),
 

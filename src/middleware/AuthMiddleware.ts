@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client'
 import Security from "@/utils/security";
+import { error } from "console";
 
 class AuthMiddleWare extends PrismaClient {
     public router: Router;
@@ -23,7 +24,9 @@ class AuthMiddleWare extends PrismaClient {
         if (!authorization) {
             res.status(401).json({
                 status: false,
-                message: "No Authorization Header"
+                errors: {
+                    message: "No Authorization Header"
+                }
             });
             return;
         }
@@ -34,33 +37,45 @@ class AuthMiddleWare extends PrismaClient {
             if (err?.message === "invalid token") {
                 res.status(401).json({
                     status: false,
-                    message: "Error! Invalid Token..."
+                    errors : {
+                        message: "Error! Invalid Token..."
+                    } 
                 });
             }
             else if (err?.message === "jwt malformed") {
                 res.status(401).json({
                     status: false,
-                    message: "Error! Invalid Token Format..."
+                    errors: {
+                        message: "Error! Invalid Token Format..."
+                    }
                 });
             } else if (err?.message === "jwt expired") {
                 res.status(401).json({
                     status: false,
-                    message: "Error! Token Expired..."
+                    errors: {
+                        message: "Error! Token Expired..."
+                    }
                 });
             } else if (err?.message === "invalid signature") {
                 res.status(401).json({
                     status: false,
-                    message: "Error! Invalid Token signature..."
+                    errors: {
+                        message: "Error! Invalid Token signature..."
+                    }
                 });
             } else if(err?.message === "invalid algorithm") {
                 res.status(401).json({
                     status: false,
-                    message: "Error! Invalid Algorithm..."
+                    errors: {
+                        message: "Error! Invalid Algorithm..."
+                    }
                 });
             } else if(err?.message === "jwt must be provided") {
                 res.status(401).json({
                     status: false,
-                    message: "Error! Token must be provided..."
+                    errors: {
+                        message: "Error! Token must be provided..."
+                    }
                 });
             }
             return next(err);

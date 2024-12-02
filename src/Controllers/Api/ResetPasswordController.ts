@@ -1,14 +1,14 @@
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
 import { NextFunction, Request, Response, Router } from "express";
 import { check, ValidationChain, validationResult } from "express-validator";
-import jwt,{ JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { Prisma } from "@prisma/client";
 
 const router: Router = Router();
 
-class ResetPasswordController extends AuthMiddleWare  {
+class ResetPasswordController extends AuthMiddleWare {
     private users: Prisma.UserUpdateInput;
     constructor() {
         super(router);
@@ -19,7 +19,7 @@ class ResetPasswordController extends AuthMiddleWare  {
         this.initializeRoutes();
     }
 
-    private readonly publicKey = fs.readFileSync('./lib/public.key','utf-8');
+    private readonly publicKey = fs.readFileSync('./lib/public.key', 'utf-8');
 
     private initializeRoutes(): void {
         this.protectedRouter.post("/reset-password", this.validator(), this.resetPassword.bind(this));
@@ -27,24 +27,35 @@ class ResetPasswordController extends AuthMiddleWare  {
     }
 
     private async resetPassword(req: Request<{ password: string, token: string }>, res: Response, next: NextFunction): Promise<void> {
-        const { password,token } = req.body;
+        const { password, token } = req.body;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            const validationErrors: Array<{ param: string; msg: string }> = errors
+                .array()
+                .map((error) => ({
+                    param: (error as any).path,
+                    msg: (error as any).msg,
+                }));
+
             res.status(400).json({
                 status: false,
-                message: errors.array()[0].msg
+                errors: validationErrors.map((err) => ({
+                    field: err.param,
+                    message: err.msg,
+                })),
             });
             return;
         }
+
         try {
             const decToken = this.security.decrypt(token) as string;
-            const passwordToken = jwt.verify(decToken, fs.readFileSync('./lib/key-password/public.key','utf-8')) as JwtPayload;
+            const passwordToken = jwt.verify(decToken, fs.readFileSync('./lib/key-password/public.key', 'utf-8')) as JwtPayload;
             const salt = bcrypt.genSaltSync(10);
             const hash = bcrypt.hashSync(password, salt);
             this.users = {
                 email: passwordToken.email,
                 password: hash
-            }; 
+            };
             const data = await this.user.update({
                 where: { email: passwordToken.email },
                 data: this.users
@@ -58,7 +69,9 @@ class ResetPasswordController extends AuthMiddleWare  {
         } catch (err) {
             res.status(400).json({
                 status: false,
-                message: "Request data is missing. Token is invalid or expired"
+                errors: {
+                    message: "Request data is missing. Token is invalid or expired"
+                }
             })
             return next(err);
         }
@@ -78,7 +91,7 @@ class ResetPasswordController extends AuthMiddleWare  {
                         username: decodedToken.username,
                         email: decodedToken.email,
                     },
-                    fs.readFileSync('./lib/key-password/private.key','utf-8'),
+                    fs.readFileSync('./lib/key-password/private.key', 'utf-8'),
                     { expiresIn: "1h", algorithm: 'RS256' }
                 );
             res.status(201).json({
@@ -91,7 +104,9 @@ class ResetPasswordController extends AuthMiddleWare  {
         } catch (err) {
             res.status(400).json({
                 status: false,
-                message: "Invalid or expired token..."
+                errors: {
+                    message: "Invalid or expired token..."
+                }
             });
             return next(err);
         }
