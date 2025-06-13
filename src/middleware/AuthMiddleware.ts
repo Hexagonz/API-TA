@@ -28,57 +28,31 @@ class AuthMiddleWare extends PrismaClient {
                     message: "No Authorization Header"
                 }
             });
-            return;
         }
-        const token = authorization.split(" ")[1];
-        const decAccses = this.security.decrypt(token as string);
+
+        const token = authorization?.split(" ")[1];
         const publicKey = fs.readFileSync('./lib/public.key', 'utf-8');
-        jwt.verify(decAccses as string, publicKey, function (err) {
-            if (err?.message === "invalid token") {
-                res.status(401).json({
+
+        jwt.verify(token as string, publicKey, (err, decoded) => {
+            if (err) {
+                const errorMessages: Record<string, string> = {
+                    "invalid token": "Error! Invalid Token...",
+                    "jwt malformed": "Error! Invalid Token Format...",
+                    "jwt expired": "Error! Token Expired...",
+                    "invalid signature": "Error! Invalid Token signature...",
+                    "invalid algorithm": "Error! Invalid Algorithm...",
+                    "jwt must be provided": "Error! Token must be provided..."
+                };
+
+                const message = errorMessages[err.message] || "Error! Authentication failed.";
+                return res.status(401).json({
                     status: false,
-                    errors : {
-                        message: "Error! Invalid Token..."
-                    } 
+                    errors: { message }
                 });
             }
-            else if (err?.message === "jwt malformed") {
-                res.status(401).json({
-                    status: false,
-                    errors: {
-                        message: "Error! Invalid Token Format..."
-                    }
-                });
-            } else if (err?.message === "jwt expired") {
-                res.status(401).json({
-                    status: false,
-                    errors: {
-                        message: "Error! Token Expired..."
-                    }
-                });
-            } else if (err?.message === "invalid signature") {
-                res.status(401).json({
-                    status: false,
-                    errors: {
-                        message: "Error! Invalid Token signature..."
-                    }
-                });
-            } else if(err?.message === "invalid algorithm") {
-                res.status(401).json({
-                    status: false,
-                    errors: {
-                        message: "Error! Invalid Algorithm..."
-                    }
-                });
-            } else if(err?.message === "jwt must be provided") {
-                res.status(401).json({
-                    status: false,
-                    errors: {
-                        message: "Error! Token must be provided..."
-                    }
-                });
-            }
-            return next(err);
+
+            (req as any).user = decoded;
+            next();
         });
     }
 }

@@ -140,18 +140,13 @@
  *     Register:
  *       type: object
  *       required:
- *         - name
- *         - email
+ *         - username
  *         - password
  *         - password_confirmation
  *       properties:
- *         name:
+ *         username:
  *           type: string
  *           description: The name of the user
- *         email:
- *           type: string
- *           format: email
- *           description: The email address of the user
  *         password:
  *           type: string
  *           description: The password for the user account
@@ -159,8 +154,7 @@
  *           type: string
  *           description: Password confirmation to match the password field
  *       example:
- *         name: John Doe
- *         email: johndoe@email.com
+ *         username: "32022222"
  *         password: password123
  *         password_confirmation: password123
  */
@@ -193,18 +187,18 @@
  *     Login:
  *       type: object
  *       required:
- *         - email
+ *         - username
  *         - password
  *       properties:
  *         email:
  *           type: string
- *           format: email
- *           description: The email address of the user
+ *           format: username
+ *           description: The username of the user
  *         password:
  *           type: string
  *           description: The password for the user account
  *       example:
- *         email: johndoe@email.com
+ *         username: "3212121"
  *         password: password123
  */
 
@@ -227,11 +221,8 @@
  *           properties:
  *             id:
  *               type: string
- *             name:
+ *             username:
  *               type: string
- *             email:
- *               type: string
- *               format: email
  *             password:
  *               type: string
  *         message:
@@ -240,8 +231,7 @@
  *         status: true
  *         data:
  *           id: "1"
- *           name: John Doe
- *           email: johndoe@email.com
+ *           username: "32212121"
  *           password: hashedPassword#
  *         message: Register successfully...
  */
@@ -265,11 +255,8 @@
  *           properties:
  *             id:
  *               type: string
- *             name:
+ *             username:
  *               type: string
- *             email:
- *               type: string
- *               format: email
  *             password:
  *               type: string
  *             accses_token:
@@ -282,8 +269,7 @@
  *         status: true
  *         data:
  *           id: "1"
- *           name: John Doe
- *           email: johndoe@email.com
+ *           name: "3232232"
  *           password: hashedPassword#
  *           accses_token: accsestToken#
  *           refresh_token: refreshToken#
@@ -309,9 +295,8 @@
  *           properties:
  *             id:
  *               type: string
- *             email:
+ *             username:
  *               type: string
- *               format: email
  *             password:
  *               type: string
  *             token:
@@ -322,7 +307,7 @@
  *         status: true
  *         data:
  *           id: "1"
- *           email: johndoe@email.com
+ *           username: "3232323232"
  *           password: hashedPassword#
  *           token: resetPasswordToken#
  *         message: Success Reset Password User...

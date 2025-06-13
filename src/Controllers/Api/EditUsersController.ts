@@ -1,38 +1,62 @@
-import { Request, Response, Router } from "express";
-import bcrypt from "bcryptjs";
+import AuthMiddleWare from "@/middleware/AuthMiddleware";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { NextFunction, Request, Response, Router } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import fs from "fs";
 import { check, ValidationChain, validationResult } from "express-validator";
-import { PrismaClient, Prisma } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
-class RegisterController extends PrismaClient {
-  public router: Router;
-  private user: Prisma.UsersCreateInput;
+const router = Router();
+
+class EditUsersController extends AuthMiddleWare {
+  private user: PrismaClient;
+  private edituser: Prisma.UsersCreateInput;
+
+  private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
-    super();
-    this.router = Router();
-    this.user = {
+    super(router);
+    this.user = new PrismaClient();
+    this.edituser = {
       username: "",
       name: "",
       password: "",
-      role: "admin",
+      role: undefined,
     };
     this.initializeRoutes();
   }
 
-  private initializeRoutes() {
-    this.router.post("/register", this.validator(), this.register.bind(this));
+  private initializeRoutes(): void {
+    this.protectedRouter.post(
+      "/users",
+      this.validator(),
+      this.addUsers.bind(this)
+    );
   }
 
-  private async register(
+  private async addUsers(
     req: Request<{
       username: string;
       name: string;
       password: string;
       role: string;
     }>,
-    res: Response
+    res: Response,
+    next: NextFunction
   ): Promise<void> {
     const { username, name, password, role } = req.body;
+    const authHeader = req.headers.authorization?.split(" ")[1];
+    const decoded = jwt.verify(
+      authHeader as string,
+      this.privateKey
+    ) as JwtPayload;
+    if (decoded.role !== "admin") {
+      res.status(403).json({
+        status: false,
+        message: "Akses ditolak: Hanya admin yang bisa edit data user",
+      });
+      return;
+    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const validationErrors: Array<{ param: string; msg: string }> = errors
@@ -51,7 +75,6 @@ class RegisterController extends PrismaClient {
       });
       return;
     }
-
     try {
       let existingUser = await this.users.findUnique({
         where: {
@@ -59,31 +82,34 @@ class RegisterController extends PrismaClient {
         },
       });
 
-      if (!existingUser) {
+      if (existingUser) {
         const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync(password, salt);
 
-        this.user = {
+        this.edituser = {
           username,
           name,
           password: hash,
           role,
         };
-        await this.users.create({ data: this.user });
+        await this.users.update({
+          where: {
+            username,
+          },
+          data: this.edituser,
+        });
 
-        res.status(201).json({
+        res.status(200).json({
           status: true,
-          data: this.users,
-          message: "User created successfully...",
+          data: this.edituser,
+          message: "User updated successfully...",
         });
       } else {
-        if (existingUser.username === username) {
-          res.status(409).json({
-            success: false,
-            message: `Username ${username} already exists`,
-          });
-          return;
-        }
+        res.status(409).json({
+          success: false,
+          message: `Username ${username} tidak ditemukan`,
+        });
+        return;
       }
       return;
     } catch (err) {
@@ -94,7 +120,6 @@ class RegisterController extends PrismaClient {
       });
     }
   }
-
   private validator(): ValidationChain[] {
     return [
       check("username")
@@ -137,4 +162,4 @@ class RegisterController extends PrismaClient {
   }
 }
 
-export default RegisterController;
+export default EditUsersController;

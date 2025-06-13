@@ -13,31 +13,99 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Users {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  name      String   @db.VarChar(100)
+  role      Role     @default(admin)
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-model User {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  email      String   @unique
-  role       Role     @default(admin)
-  password   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  refreshTokens Refresh_Token[] 
+  refreshTokens Refresh_Token?
 }
 
 model Refresh_Token {
-  id        Int       @id @default(autoincrement())
-  userId    Int?      @unique
-  user      User?     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  token     String    @db.Text 
+  id        Int      @id @default(autoincrement())
+  id_user    Int?     @unique
+  user      Users?    @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  token     String   @db.Text
   expiresAt DateTime
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Kelas {
+  id_kelas     Int    @id @default(autoincrement())
+  nama_kelas   String @db.VarChar(20)
+  kelas_romawi String @db.VarChar(5)
+
+  siswa Siswa?
+}
+
+model Jurusan {
+  id_jurusan   Int    @id @default(autoincrement())
+  nama_jurusan String @db.VarChar(10)
+  deskripsi    String @db.VarChar(50)
+
+  siswa Siswa?
+}
+
+model Mata_Pelajaran {
+  id_mapel   Int    @id @default(autoincrement())
+  nama_mapel String @db.VarChar(50)
+
+  guru Guru?
+}
+
+model Guru {
+  id_guru   Int    @id @default(autoincrement())
+  nip       String @unique @db.VarChar(20)
+  nama_guru String @db.VarChar(60)
+  id_mapel  Int?   @unique
+
+  mapel Mata_Pelajaran? @relation(fields: [id_mapel], references: [id_mapel], onUpdate: Cascade, onDelete: Cascade)
+
+  presensi Presensi[]
+}
+
+model Siswa {
+  id_siswa   Int    @id @default(autoincrement())
+  nisn       String @unique @db.VarChar(20)
+  nama_siswa String @db.VarChar(60)
+  no_absen   Int    @db.TinyInt
+  id_kelas   Int?   @unique
+  id_jurusan Int?   @unique
+
+  kelas   Kelas?   @relation(fields: [id_kelas], references: [id_kelas], onUpdate: Cascade, onDelete: Cascade)
+  jurusan Jurusan? @relation(fields: [id_jurusan], references: [id_jurusan], onUpdate: Cascade, onDelete: Cascade)
+
+  presensi Presensi[]
+}
+
+model Presensi {
+  id_presensi Int      @id @default(autoincrement())
+  id_siswa    Int
+  id_guru     Int
+  tanggal     DateTime @db.DateTime()
+  waktu       DateTime @db.Time()
+  hari        Hari     @default(Senin)
+  status      Boolean
+
+  siswa Siswa? @relation(fields: [id_siswa], references: [id_siswa], onUpdate: Cascade, onDelete: Cascade)
+  guru  Guru?  @relation(fields: [id_guru], references: [id_guru], onUpdate: Cascade, onDelete: Cascade)
+}
+
+enum Hari {
+  Senin
+  Selasa
+  Rabu
+  Kamis
+  Jumat
 }
 
 enum Role {
   admin
-  dosen
-  mahasiswa
+  guru
+  siswa
 }
