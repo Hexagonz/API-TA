@@ -9,14 +9,12 @@ import bcrypt from "bcryptjs";
 const router = Router();
 
 class EditUsersController extends AuthMiddleWare {
-  private user: PrismaClient;
   private edituser: Prisma.UsersCreateInput;
 
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
     super(router);
-    this.user = new PrismaClient();
     this.edituser = {
       username: "",
       name: "",
@@ -89,7 +87,7 @@ class EditUsersController extends AuthMiddleWare {
         this.edituser = {
           username,
           name,
-          password: hash,
+          password: password == existingUser.password ? existingUser.password : hash,
           role,
         };
         await this.users.update({
@@ -139,13 +137,13 @@ class EditUsersController extends AuthMiddleWare {
       check("role")
         .notEmpty()
         .withMessage("Field role cannot be empty!")
-        .isIn(["admin", "mahasiswa", "dosen"])
+        .isIn(["admin", "siswa", "guru"])
         .withMessage("Invalid role value!"),
       check("password")
         .notEmpty()
         .withMessage("field password cannot be empty!")
         .bail()
-        .isLength({ min: 8, max: 30 })
+        .isLength({ min: 8 })
         .withMessage("Password must be between 8 and 30 characters"),
       check("password_confirmation")
         .notEmpty()

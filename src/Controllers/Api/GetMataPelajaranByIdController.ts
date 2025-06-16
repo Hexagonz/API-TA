@@ -6,23 +6,24 @@ import fs from "fs";
 
 const router = Router();
 
-class GetUsersController extends AuthMiddleWare {
-
+class GetMataPelajaranByIdController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
+
   constructor() {
     super(router);
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.get("/users", this.getUsers.bind(this));
+    this.protectedRouter.get("/mata-pelajaran/:id", this.getMapelId.bind(this));
   }
 
-  private async getUsers(
+  private async getMapelId(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
+    const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
@@ -36,21 +37,25 @@ class GetUsersController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingUser = await this.users.findMany();
+      const existingUser = await this.mata_Pelajaran.findUnique({
+        where : {
+            id_mapel: Number(id)
+        }
+      });
 
-      if (!existingUser || existingUser.length === 0) {
+      if (!existingUser) {
         res.status(404).json({
           status: false,
-          message: "Tidak ada user ditemukan",
+          message: "Mata Pelajaran tidak ditemukan",
           data: null,
         });
         return;
       }
-      const data = existingUser.filter((a) => a.id !== decoded.id_user);
+
       res.status(200).json({
         status: true,
-        message: "Berhasil mengambil data user",
-        data: data,
+        message: "Berhasil mengambil data Mata Pelajaran",
+        data: existingUser,
       });
       return;
     } catch (error) {
@@ -65,4 +70,4 @@ class GetUsersController extends AuthMiddleWare {
   }
 }
 
-export default GetUsersController;
+export default GetMataPelajaranByIdController;

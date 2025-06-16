@@ -9,10 +9,10 @@ import { Prisma } from "@prisma/client";
 const router: Router = Router();
 
 class ResetPasswordController extends AuthMiddleWare {
-  private users: Prisma.UserUpdateInput;
+  private user: Prisma.UsersUpdateInput;
   constructor() {
     super(router);
-    this.users = {
+    this.user = {
       username: "",
       password: "",
     };
@@ -66,11 +66,11 @@ class ResetPasswordController extends AuthMiddleWare {
       ) as JwtPayload;
       const salt = bcrypt.genSaltSync(10);
       const hash = bcrypt.hashSync(password, salt);
-      this.users = {
+      this.user = {
         username: passwordToken.username,
         password: hash,
       };
-      const data = await this.user.update({
+      const data = await this.users.update({
         where: { username: passwordToken.username },
         data: this.users,
       });
@@ -107,9 +107,9 @@ class ResetPasswordController extends AuthMiddleWare {
       ) as JwtPayload;
       reqToken = jwt.sign(
         {
-          userId: decodedToken.userId,
+          id_user: decodedToken.id_user,
           username: decodedToken.username,
-          email: decodedToken.email,
+          role: decodedToken.role,
         },
         fs.readFileSync("./lib/key-password/private.key", "utf-8"),
         { expiresIn: "1h", algorithm: "RS256" }

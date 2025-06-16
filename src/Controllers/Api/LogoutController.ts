@@ -75,7 +75,6 @@ class LogoutController extends AuthMiddleWare {
           message: "Invalid or expired refresh token",
         },
       });
-      await this.$disconnect();
       return next(err);
     }
   }

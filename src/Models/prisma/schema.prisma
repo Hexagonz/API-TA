@@ -53,7 +53,7 @@ model Jurusan {
 
 model Mata_Pelajaran {
   id_mapel   Int    @id @default(autoincrement())
-  nama_mapel String @db.VarChar(50)
+  nama_mapel String @db.VarChar(50) @unique
 
   guru Guru?
 }

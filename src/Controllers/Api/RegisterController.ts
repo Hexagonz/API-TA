@@ -73,7 +73,7 @@ class RegisterController extends PrismaClient {
 
         res.status(201).json({
           status: true,
-          data: this.users,
+          data: this.user,
           message: "User created successfully...",
         });
       } else {
@@ -114,13 +114,13 @@ class RegisterController extends PrismaClient {
       check("role")
         .notEmpty()
         .withMessage("Field role cannot be empty!")
-        .isIn(["admin", "mahasiswa", "dosen"])
+        .isIn(["admin", "siswa", "guru"])
         .withMessage("Invalid role value!"),
       check("password")
         .notEmpty()
         .withMessage("field password cannot be empty!")
         .bail()
-        .isLength({ min: 8, max: 30 })
+        .isLength({ min: 8 })
         .withMessage("Password must be between 8 and 30 characters"),
       check("password_confirmation")
         .notEmpty()

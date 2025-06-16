@@ -6,23 +6,27 @@ import fs from "fs";
 
 const router = Router();
 
-class GetUsersController extends AuthMiddleWare {
-
+class DeleteJurusanController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
+
   constructor() {
     super(router);
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.get("/users", this.getUsers.bind(this));
+    this.protectedRouter.delete(
+      "/jurusan/:id",
+      this.deleteJurusan.bind(this)
+    );
   }
 
-  private async getUsers(
+  private async deleteJurusan(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
+    const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
@@ -36,21 +40,30 @@ class GetUsersController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingUser = await this.users.findMany();
+      const existingUser = await this.jurusan.findUnique({
+        where: {
+          id_jurusan: Number(id),
+        },
+      });
 
-      if (!existingUser || existingUser.length === 0) {
+      if (!existingUser) {
         res.status(404).json({
           status: false,
-          message: "Tidak ada user ditemukan",
+          message: "Jurusan tidak ditemukan",
           data: null,
         });
         return;
       }
-      const data = existingUser.filter((a) => a.id !== decoded.id_user);
+      const existingJurusan = await this.jurusan.delete({
+        where: {
+          id_jurusan: Number(id),
+        },
+      });
+
       res.status(200).json({
         status: true,
-        message: "Berhasil mengambil data user",
-        data: data,
+        message: "Berhasil menghapus data Jurusan",
+        data: existingJurusan,
       });
       return;
     } catch (error) {
@@ -65,4 +78,4 @@ class GetUsersController extends AuthMiddleWare {
   }
 }
 
-export default GetUsersController;
+export default DeleteJurusanController;

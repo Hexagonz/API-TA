@@ -6,7 +6,7 @@ import fs from "fs";
 
 const router = Router();
 
-class GetUsersController extends AuthMiddleWare {
+class GetJurusanController extends AuthMiddleWare {
 
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
   constructor() {
@@ -15,10 +15,10 @@ class GetUsersController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.get("/users", this.getUsers.bind(this));
+    this.protectedRouter.get("/jurusan", this.getJurusans.bind(this));
   }
 
-  private async getUsers(
+  private async getJurusans(
     req: Request,
     res: Response,
     next: NextFunction
@@ -36,21 +36,21 @@ class GetUsersController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingUser = await this.users.findMany();
+      const existingJurusan = await this.jurusan.findMany();
 
-      if (!existingUser || existingUser.length === 0) {
+      if (!existingJurusan || existingJurusan.length === 0) {
         res.status(404).json({
           status: false,
-          message: "Tidak ada user ditemukan",
+          message: "Tidak ada jurusan ditemukan",
           data: null,
         });
         return;
       }
-      const data = existingUser.filter((a) => a.id !== decoded.id_user);
+
       res.status(200).json({
         status: true,
-        message: "Berhasil mengambil data user",
-        data: data,
+        message: "Berhasil mengambil data Jurusan",
+        data: existingJurusan,
       });
       return;
     } catch (error) {
@@ -65,4 +65,4 @@ class GetUsersController extends AuthMiddleWare {
   }
 }
 
-export default GetUsersController;
+export default GetJurusanController;

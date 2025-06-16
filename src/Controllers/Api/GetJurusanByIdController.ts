@@ -1,28 +1,28 @@
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
-import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response, Router } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import fs from "fs";
 
 const router = Router();
 
-class GetUsersController extends AuthMiddleWare {
-
+class GetMataPelajaranByIdController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
+
   constructor() {
     super(router);
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.get("/users", this.getUsers.bind(this));
+    this.protectedRouter.get("/jurusan/:id", this.getJurusanId.bind(this));
   }
 
-  private async getUsers(
+  private async getJurusanId(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
+    const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
@@ -36,21 +36,25 @@ class GetUsersController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingUser = await this.users.findMany();
+      const existingJurusan = await this.jurusan.findUnique({
+        where : {
+            id_jurusan: Number(id)
+        }
+      });
 
-      if (!existingUser || existingUser.length === 0) {
+      if (!existingJurusan) {
         res.status(404).json({
           status: false,
-          message: "Tidak ada user ditemukan",
+          message: "Jurusan tidak ditemukan",
           data: null,
         });
         return;
       }
-      const data = existingUser.filter((a) => a.id !== decoded.id_user);
+
       res.status(200).json({
         status: true,
-        message: "Berhasil mengambil data user",
-        data: data,
+        message: "Berhasil mengambil data Jurusan",
+        data: existingJurusan,
       });
       return;
     } catch (error) {
@@ -65,4 +69,4 @@ class GetUsersController extends AuthMiddleWare {
   }
 }
 
-export default GetUsersController;
+export default GetMataPelajaranByIdController;

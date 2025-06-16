@@ -45,7 +45,7 @@ class RefreshTokenController extends AuthMiddleWare {
 
       const newAccessToken = jwt.sign(
         {
-          userId: user.userId,
+          id_user: user.id_user,
           role: user.role,
           username: user.username,
         },

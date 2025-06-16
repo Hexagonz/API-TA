@@ -12,9 +12,9 @@ async function main() {
   switch (environment) {
     case 'development':
       const salt = bcrypt.genSaltSync(10);
-      const admin = await prisma.user.upsert({
+      const admin = await prisma.users.upsert({
         where: { username: '3202216016' },
-        update: { username: 'Admin' },
+        update: { username: '3202216016' },
         create: { 
           username: '3202216016',
           name: 'Muhammad Fitriadi',

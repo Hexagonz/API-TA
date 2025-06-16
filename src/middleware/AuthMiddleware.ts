@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client'
 import Security from "@/utils/security";
-import { error } from "console";
 
 class AuthMiddleWare extends PrismaClient {
     public router: Router;

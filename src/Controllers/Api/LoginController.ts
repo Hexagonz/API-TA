@@ -83,7 +83,7 @@ class LoginController extends PrismaClient {
     try {
       token = jwt.sign(
         {
-          userId: existingUser?.id,
+          id_user: existingUser?.id,
           role: existingUser?.role,
           username: existingUser?.username,
         },
@@ -93,7 +93,7 @@ class LoginController extends PrismaClient {
 
       refreshToken = jwt.sign(
         {
-          userId: existingUser?.id,
+          id_user: existingUser?.id,
           role: existingUser?.role,
           username: existingUser?.username,
         },
@@ -153,7 +153,7 @@ class LoginController extends PrismaClient {
       check("password")
         .notEmpty()
         .withMessage("field password cannot be empty!")
-        .isLength({ min: 8, max: 30 })
+        .isLength({ min: 8 })
         .withMessage("Password must be between 8 and 30 characters"),
     ];
   }
