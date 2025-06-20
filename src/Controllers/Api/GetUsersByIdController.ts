@@ -7,12 +7,10 @@ import fs from "fs";
 const router = Router();
 
 class GetUsersByIdController extends AuthMiddleWare {
-  private user: PrismaClient;
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
     super(router);
-    this.user = new PrismaClient();
     this.initializeRoutes();
   }
 

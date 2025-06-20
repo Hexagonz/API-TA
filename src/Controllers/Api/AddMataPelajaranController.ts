@@ -59,7 +59,7 @@ class AddMataPelajaranController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingMapel = await this.mata_Pelajaran.findUnique({
+      const existingMapel = await this.mata_Pelajaran.findFirst({
         where: {
           nama_mapel: nama_mapel,
         },

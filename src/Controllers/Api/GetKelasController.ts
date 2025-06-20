@@ -6,27 +6,23 @@ import fs from "fs";
 
 const router = Router();
 
-class DeleteMataPelajaranController extends AuthMiddleWare {
-  private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
+class GetKelasController extends AuthMiddleWare {
 
+  private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
   constructor() {
     super(router);
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.delete(
-      "/mata-pelajaran/:id",
-      this.deleteMapel.bind(this)
-    );
+    this.protectedRouter.get("/kelas", this.getKelass.bind(this));
   }
 
-  private async deleteMapel(
+  private async getKelass(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
@@ -40,30 +36,21 @@ class DeleteMataPelajaranController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingUser = await this.mata_Pelajaran.findUnique({
-        where: {
-          id_mapel: Number(id),
-        },
-      });
+      const existingKelas = await this.kelas.findMany();
 
-      if (!existingUser) {
+      if (!existingKelas || existingKelas.length === 0) {
         res.status(404).json({
           status: false,
-          message: "Mata Pelajaran tidak ditemukan",
+          message: "Tidak ada kelas ditemukan",
           data: null,
         });
         return;
       }
-      const existingMapel = await this.mata_Pelajaran.delete({
-        where: {
-          id_mapel: Number(id),
-        },
-      });
 
       res.status(200).json({
         status: true,
-        message: "Berhasil menghapus data Mata Pelajaran",
-        data: existingMapel,
+        message: "Berhasil mengambil data Kelas",
+        data: existingKelas,
       });
       return;
     } catch (error) {
@@ -78,4 +65,4 @@ class DeleteMataPelajaranController extends AuthMiddleWare {
   }
 }
 
-export default DeleteMataPelajaranController;
+export default GetKelasController;

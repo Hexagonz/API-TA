@@ -6,7 +6,7 @@ import fs from "fs";
 import { check, ValidationChain, validationResult } from "express-validator";
 
 const router = Router();
-class EditMataPelajaranController extends AuthMiddleWare {
+class EditSiswaController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
@@ -16,19 +16,19 @@ class EditMataPelajaranController extends AuthMiddleWare {
 
   private initializeRoutes(): void {
     this.protectedRouter.post(
-      "/mata-pelajaran/:id",
+      "/siswa/:id",
       this.validator(),
-      this.editMataPelajaran.bind(this)
+      this.editSiswa.bind(this)
     );
   }
 
-  private async editMataPelajaran(
+  private async editSiswa(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { nama_mapel } = req.body;
-    const { id } = req.params;
+    const { nama_siswa, nisn, no_absen, id_kelas, id_jurusan } = req.body;
+    const {id} = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
@@ -60,44 +60,44 @@ class EditMataPelajaranController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingMapel = await this.mata_Pelajaran.findFirst({
+      const existingSiswa = await this.siswa.findFirst({
         where: {
-          nama_mapel: nama_mapel,
+          nisn: nisn,
         },
       });
 
-      if (existingMapel && existingMapel.id_mapel != Number(id)) {
+      if (existingSiswa && existingSiswa.id_siswa != Number(id)) {
         res.status(404).json({
           status: false,
-          message: `Mata Pelajaran ${existingMapel.nama_mapel} already exists`,
+          message: `Nisn Siswa ${existingSiswa.nisn} already exists`,
           data: null,
         });
         return;
       }
-      const update = await this.mata_Pelajaran.update({
+      const update = await this.siswa.update({
         where: {
-          id_mapel: Number(id),
+            id_siswa: Number(id)
         },
         data: {
-          nama_mapel: nama_mapel,
+          nama_siswa,
+          nisn,
+          no_absen,
+          id_kelas,
+          id_jurusan,
         },
       });
-      const data = {
-        id: update.id_mapel,
-        nama_mapel: update.nama_mapel,
-      };
       res.status(200).json({
         status: true,
-        message: "Mata Pelajaran updated successfully...",
-        data: data,
+        message: "Siswa updated successfully...",
+        data: update,
       });
       return;
     } catch (error) {
       console.error(error);
-      res.status(404).json({
+      res.status(500).json({
         status: false,
-        message: "Id Mata Pelajaran tidak ditemukan",
-        data: null,
+        message: "Terjadi kesalahan pada server",
+        error: (error as Error).message,
       });
       return;
     }
@@ -105,15 +105,37 @@ class EditMataPelajaranController extends AuthMiddleWare {
 
   private validator(): ValidationChain[] {
     return [
-      check("nama_mapel")
+      check("nama_siswa")
         .notEmpty()
-        .withMessage("field nama_mapel cannot be empty!")
-        .isLength({ min: 4, max: 50 })
-        .withMessage("Mata Pelajaran must be between 4 and 50 characters")
+        .withMessage("field nama_siswa cannot be empty!")
+        .isLength({ min: 3, max: 60 })
+        .withMessage("nama_siswa must be between 3 and 60 characters")
         .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _-]).*(?<![_-])$/)
         .withMessage("Unique characters are not allowed!"),
+      check("nisn")
+        .notEmpty()
+        .withMessage("field nisn cannot be empty!")
+        .isLength({ min: 8, max: 15 })
+        .withMessage("nisn must be between 8 and 15 characters")
+        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _-]).*(?<![_-])$/)
+        .withMessage("Unique characters are not allowed!"),
+      check("no_absen")
+        .notEmpty()
+        .withMessage("Field no_absen cannot be empty!")
+        .isNumeric()
+        .withMessage("Field no_absen must be a number!"),
+      check("id_kelas")
+        .notEmpty()
+        .withMessage("Field id_kelas cannot be empty!")
+        .isNumeric()
+        .withMessage("Field id_kelas must be a number!"),
+      check("id_jurusan")
+        .notEmpty()
+        .withMessage("Field id_jurusan cannot be empty!")
+        .isNumeric()
+        .withMessage("Field id_jurusan must be a number!"),
     ];
   }
 }
 
-export default EditMataPelajaranController;
+export default EditSiswaController;

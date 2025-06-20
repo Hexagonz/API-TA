@@ -6,7 +6,7 @@ import fs from "fs";
 
 const router = Router();
 
-class DeleteMataPelajaranController extends AuthMiddleWare {
+class DeleteSiswaController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
@@ -16,12 +16,12 @@ class DeleteMataPelajaranController extends AuthMiddleWare {
 
   private initializeRoutes(): void {
     this.protectedRouter.delete(
-      "/mata-pelajaran/:id",
-      this.deleteMapel.bind(this)
+      "/siswa/:id",
+      this.deleteSiswa.bind(this)
     );
   }
 
-  private async deleteMapel(
+  private async deleteSiswa(
     req: Request,
     res: Response,
     next: NextFunction
@@ -40,30 +40,30 @@ class DeleteMataPelajaranController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingUser = await this.mata_Pelajaran.findUnique({
+      const existingUser = await this.siswa.findUnique({
         where: {
-          id_mapel: Number(id),
+          id_siswa: Number(id),
         },
       });
 
       if (!existingUser) {
         res.status(404).json({
           status: false,
-          message: "Mata Pelajaran tidak ditemukan",
+          message: "Siswa tidak ditemukan",
           data: null,
         });
         return;
       }
-      const existingMapel = await this.mata_Pelajaran.delete({
+      const existingSiswa = await this.siswa.delete({
         where: {
-          id_mapel: Number(id),
+          id_siswa: Number(id),
         },
       });
 
       res.status(200).json({
         status: true,
-        message: "Berhasil menghapus data Mata Pelajaran",
-        data: existingMapel,
+        message: "Berhasil menghapus data Siswa",
+        data: existingSiswa,
       });
       return;
     } catch (error) {
@@ -78,4 +78,4 @@ class DeleteMataPelajaranController extends AuthMiddleWare {
   }
 }
 
-export default DeleteMataPelajaranController;
+export default DeleteSiswaController;

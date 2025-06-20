@@ -15,7 +15,7 @@ import { scheduleTokenCleanup } from "@/sever";
 import cors from "cors";
 
 const app: Application = express();
-const port: number | string = process.env.PORT_SERVER || 3000;
+const port: number | string = process.env.PORT_SERVER || 3001;
 const host: string = process.env.HOST || "http://localhost";
 const DEFAULT: string = "DefaultUrlController.ts";
 
