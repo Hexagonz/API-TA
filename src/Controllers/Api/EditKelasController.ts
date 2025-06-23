@@ -15,7 +15,7 @@ class EditKelasController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.post(
+    this.protectedRouter.put(
       "/kelas/:id",
       this.validator(),
       this.editKelas.bind(this)

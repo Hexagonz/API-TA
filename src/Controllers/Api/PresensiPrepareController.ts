@@ -67,7 +67,7 @@ class PreparePresensiController extends AuthMiddleWare {
                 id_siswa: siswa.id_siswa,
                 id_jadwal: jadwal.id_jadwal,
                 hari: jadwal.hari,
-                tanggal: new Date(), // tanggal hari ini
+                tanggal: new Date(), 
                 status: false,
                 gambar: "",
                 keterangan: "",

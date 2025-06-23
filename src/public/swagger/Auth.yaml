@@ -1,0 +1,2566 @@
+openapi: 3.0.0
+info:
+  title: School Management API
+  version: 1.0.0
+  description: API documentation for the School Management System, including authentication and core entities like Users, Kelas, Siswa, and Guru.
+
+tags:
+  - name: Auth
+    description: User authentication and authorization management
+  - name: Users
+    description: Operations related to user accounts
+  - name: Kelas
+    description: Management of kelas (Kelas)
+  - name: Jurusan
+    description: Management of jurusan (Jurusan)
+  - name: Mata Pelajaran
+    description: Management of mata-pelajaran (Mata Pelajaran)
+  - name: Guru
+    description: Management of guru (Guru)
+  - name: Siswa
+    description: Management of siswa (Siswa)
+  - name: Jadwal
+    description: Management of kelas jadwal (Jadwal)
+  - name: Presensi
+    description: Management of siswa presensi (Presensi)
+
+paths:
+  /api/v1/register:
+    post:
+      summary: Create a new user account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+      responses:
+        200:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseRegister'
+        400:
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /api/v1/login:
+    post:
+      summary: Login user and obtain access and refresh tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        200:
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseLogin'
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /api/v1/reset-password:
+    post:
+      summary: Reset user password using a token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+      responses:
+        200:
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseResetPassword'
+        400:
+          description: Invalid token or password mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /api/v1/request-reset-password:
+    post:
+      summary: Request a password reset token to be sent to the user's email
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+              properties:
+                username:
+                  type: string
+                  description: The username for which to request a password reset.
+                  example: "john.doe"
+      responses:
+        200:
+          description: Password reset token successfully created and sent (if username exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseResetPasswordRequest'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/refresh:
+    post:
+      summary: Refresh an expired access token using a refresh token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: The refresh token obtained during login.
+                  example: "some_long_refresh_token_string"
+      responses:
+        200:
+          description: New access token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseRefreshToken'
+        401:
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/logout:
+    post:
+      summary: Log out a user and invalidate their refresh token
+      tags: [Auth]
+      responses:
+        200:
+          description: User logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseLogout'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/users:
+    get:
+      summary: Get all users
+      tags: [Users]
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUsersResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new user (for admin use, different from register)
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/users/{id}:
+    get:
+      summary: Get a user by ID
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to retrieve
+      responses:
+        200:
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a user by ID
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a user by ID
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to delete
+      responses:
+        200:
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/kelas:
+    get:
+      summary: Get all kelas
+      tags: [Kelas]
+      responses:
+        200:
+          description: A list of kelas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListKelasResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new kelas
+      tags: [Kelas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Kelas'
+      responses:
+        201:
+          description: Class created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KelasResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/kelas/{id_kelas}:
+    get:
+      summary: Get a kelas by ID
+      tags: [Kelas]
+      parameters:
+        - in: path
+          name: id_kelas
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the kelas to retrieve
+      responses:
+        200:
+          description: Class found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KelasResponse'
+        404:
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a kelas by ID
+      tags: [Kelas]
+      parameters:
+        - in: path
+          name: id_kelas
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the kelas to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Kelas'
+      responses:
+        200:
+          description: Class updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KelasResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a kelas by ID
+      tags: [Kelas]
+      parameters:
+        - in: path
+          name: id_kelas
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the kelas to delete
+      responses:
+        200:
+          description: Class deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/jurusan:
+    get:
+      summary: Get all jurusan
+      tags: [Jurusan]
+      responses:
+        200:
+          description: A list of jurusan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListJurusanResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new jurusan
+      tags: [Jurusan]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Jurusan'
+      responses:
+        201:
+          description: Major created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JurusanResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/jurusan/{id_jurusan}:
+    get:
+      summary: Get a jurusan by ID
+      tags: [Jurusan]
+      parameters:
+        - in: path
+          name: id_jurusan
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the jurusan to retrieve
+      responses:
+        200:
+          description: Major found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JurusanResponse'
+        404:
+          description: Major not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a jurusan by ID
+      tags: [Jurusan]
+      parameters:
+        - in: path
+          name: id_jurusan
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the jurusan to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Jurusan'
+      responses:
+        200:
+          description: Major updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JurusanResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Major not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a jurusan by ID
+      tags: [Jurusan]
+      parameters:
+        - in: path
+          name: id_jurusan
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the jurusan to delete
+      responses:
+        200:
+          description: Major deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Major not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/mata-pelajaran:
+    get:
+      summary: Get all mata-pelajaran
+      tags: [Mata Pelajaran]
+      responses:
+        200:
+          description: A list of mata-pelajaran
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMataPelajaranResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new mata-pelajaran
+      tags: [Mata Pelajaran]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MataPelajaran'
+      responses:
+        201:
+          description: Subject created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MataPelajaranResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/mata-pelajaran/{id_mapel}:
+    get:
+      summary: Get a mata-pelajaran by ID
+      tags: [Mata Pelajaran]
+      parameters:
+        - in: path
+          name: id_mapel
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the mata-pelajaran to retrieve
+      responses:
+        200:
+          description: Subject found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MataPelajaranResponse'
+        404:
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a mata-pelajaran by ID
+      tags: [Mata Pelajaran]
+      parameters:
+        - in: path
+          name: id_mapel
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the mata-pelajaran to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MataPelajaran'
+      responses:
+        200:
+          description: Subject updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MataPelajaranResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a mata-pelajaran by ID
+      tags: [Mata Pelajaran]
+      parameters:
+        - in: path
+          name: id_mapel
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the mata-pelajaran to delete
+      responses:
+        200:
+          description: Subject deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/guru:
+    get:
+      summary: Get all guru
+      tags: [Guru]
+      responses:
+        200:
+          description: A list of guru
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListGuruResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new guru
+      tags: [Guru]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Guru'
+      responses:
+        201:
+          description: Teacher created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuruResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/guru/{id_guru}:
+    get:
+      summary: Get a guru by ID
+      tags: [Guru]
+      parameters:
+        - in: path
+          name: id_guru
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the guru to retrieve
+      responses:
+        200:
+          description: Teacher found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuruResponse'
+        404:
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a guru by ID
+      tags: [Guru]
+      parameters:
+        - in: path
+          name: id_guru
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the guru to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Guru'
+      responses:
+        200:
+          description: Teacher updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuruResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a guru by ID
+      tags: [Guru]
+      parameters:
+        - in: path
+          name: id_guru
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the guru to delete
+      responses:
+        200:
+          description: Teacher deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/siswa:
+    get:
+      summary: Get all siswa
+      tags: [Siswa]
+      responses:
+        200:
+          description: A list of siswa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSiswaResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new siswa
+      tags: [Siswa]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Siswa'
+      responses:
+        201:
+          description: Student created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiswaResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/siswa/{id_siswa}:
+    get:
+      summary: Get a siswa by ID
+      tags: [Siswa]
+      parameters:
+        - in: path
+          name: id_siswa
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the siswa to retrieve
+      responses:
+        200:
+          description: Student found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiswaResponse'
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a siswa by ID
+      tags: [Siswa]
+      parameters:
+        - in: path
+          name: id_siswa
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the siswa to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Siswa'
+      responses:
+        200:
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiswaResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a siswa by ID
+      tags: [Siswa]
+      parameters:
+        - in: path
+          name: id_siswa
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the siswa to delete
+      responses:
+        200:
+          description: Student deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/jadwal:
+    get:
+      summary: Get all jadwal
+      tags: [Jadwal]
+      responses:
+        200:
+          description: A list of jadwal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListJadwalResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new jadwal
+      tags: [Jadwal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Jadwal'
+      responses:
+        201:
+          description: Schedule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JadwalResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/jadwal/{id_jadwal}:
+    get:
+      summary: Get a jadwal by ID
+      tags: [Jadwal]
+      parameters:
+        - in: path
+          name: id_jadwal
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the jadwal to retrieve
+      responses:
+        200:
+          description: Schedule found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JadwalResponse'
+        404:
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update a jadwal by ID
+      tags: [Jadwal]
+      parameters:
+        - in: path
+          name: id_jadwal
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the jadwal to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Jadwal'
+      responses:
+        200:
+          description: Schedule updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JadwalResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete a jadwal by ID
+      tags: [Jadwal]
+      parameters:
+        - in: path
+          name: id_jadwal
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the jadwal to delete
+      responses:
+        200:
+          description: Schedule deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/presensi:
+    get:
+      summary: Get all presensi records
+      tags: [Presensi]
+      responses:
+        200:
+          description: A list of presensi records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPresensiResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    post:
+      summary: Create a new presensi record
+      tags: [Presensi]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Presensi'
+      responses:
+        201:
+          description: Presensi record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresensiResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Some server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/v1/presensi/{id_presensi}:
+    get:
+      summary: Get an presensi record by ID
+      tags: [Presensi]
+      parameters:
+        - in: path
+          name: id_presensi
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the presensi record to retrieve
+      responses:
+        200:
+          description: Presensi record found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresensiResponse'
+        404:
+          description: Presensi record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    put:
+      summary: Update an presensi record by ID
+      tags: [Presensi]
+      parameters:
+        - in: path
+          name: id_presensi
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the presensi record to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresensiUpdate'
+      responses:
+        200:
+          description: Presensi record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresensiResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        404:
+          description: Presensi record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+    delete:
+      summary: Delete an presensi record by ID
+      tags: [Presensi]
+      parameters:
+        - in: path
+          name: id_presensi
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the presensi record to delete
+      responses:
+        200:
+          description: Presensi record deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSuccessResponse'
+        404:
+          description: Presensi record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- Auth Schemas (Existing, slightly refined) ---
+    Register:
+      type: object
+      required:
+        - username
+        - name
+        - password
+        - password_confirmation
+      properties:
+        username:
+          type: string
+          description: "⭐ A unique username for the user (e.g., siswa ID, employee ID)."
+          example: "32022222"
+        name:
+          type: string
+          description: The full name of the user.
+          example: "John Doe"
+        password:
+          type: string
+          description: The password for the user account.
+          format: password
+          minLength: 8
+          example: password123
+        password_confirmation:
+          type: string
+          description: Password confirmation to match the password field.
+          format: password
+          minLength: 8
+          example: password123
+    
+    Login:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: The unique username of the user.
+          example: "3212121"
+        password:
+          type: string
+          description: The password for the user account.
+          format: password
+          example: password123
+
+    ResetPassword:
+      type: object
+      required:
+        - token
+        - password
+        - password_confirmation
+      properties:
+        token:
+          type: string
+          description: The password reset token received (e.g., via email).
+          example: "some_reset_token_string"
+        password:
+          type: string
+          description: The new password for the user account.
+          format: password
+          minLength: 8
+          example: newPassword123
+        password_confirmation:
+          type: string
+          description: Password confirmation to match the new password field.
+          format: password
+          minLength: 8
+          example: newPassword123
+
+    ResponseRegister:
+      type: object
+      properties:
+        status:
+          type: boolean
+          description: Indicates whether the request was successful
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: The ID of the newly registered user.
+              example: 1
+            username:
+              type: string
+              description: The username of the registered user.
+              example: "32212121"
+            name:
+              type: string
+              description: The name of the registered user.
+              example: "Jane Doe"
+        message:
+          type: string
+          example: Register successfully...
+
+    ResponseLogin:
+      type: object
+      properties:
+        status:
+          type: boolean
+          description: Indicates whether the request was successful
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: The ID of the logged-in user.
+              example: 1
+            username:
+              type: string
+              description: The username of the logged-in user.
+              example: "3232232"
+            name:
+              type: string
+              description: The name of the logged-in user.
+              example: "John Doe"
+            role:
+              type: string
+              enum: [admin, guru, siswa]
+              description: The role of the logged-in user.
+              example: admin
+            access_token:
+              type: string
+              description: JWT access token for API authentication.
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            refresh_token:
+              type: string
+              description: JWT refresh token for obtaining new access tokens.
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        message:
+          type: string
+          example: Login successfully...
+
+    ResponseResetPassword:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: The ID of the user whose password was reset.
+              example: 1
+            username:
+              type: string
+              description: The username of the user.
+              example: "3232323232"
+        message:
+          type: string
+          example: Success Reset Password User...
+
+    ResponseResetPasswordRequest:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Success Created Password reset token (check email)...
+
+    ResponseRefreshToken:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: New JWT access token.
+              example: newAccsesToken#
+        message:
+          type: string
+          example: Success Created Access Token...
+
+    ResponseLogout:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Logged out successfully...
+
+    # --- Standard Response Templates ---
+    StandardSuccessResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          description: Indicates whether the request was successful
+          example: true
+        message:
+          type: string
+          description: A descriptive message
+          example: Operation successful
+      required:
+        - status
+        - message
+
+    StandardErrorResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          description: Indicates whether the request was successful
+          example: false
+        message:
+          type: string
+          description: A descriptive error message
+          example: An error occurred
+      required:
+        - status
+        - message
+
+    # --- Core Entity Schemas (based on Prisma) ---
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the user.
+          example: 1
+        username:
+          type: string
+          description: Unique username for the user.
+          example: "siswa001"
+        name:
+          type: string
+          description: Full name of the user.
+          example: "Budi Santoso"
+        role:
+          type: string
+          enum: [admin, guru, siswa]
+          description: Role of the user.
+          example: siswa
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Date and time when the user was created.
+          example: "2024-01-01T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Date and time when the user was last updated.
+          example: "2024-01-01T10:00:00Z"
+
+    CreateUser:
+      type: object
+      required:
+        - username
+        - name
+        - role
+        - password
+      properties:
+        username:
+          type: string
+          description: Unique username for the user.
+          example: "admin01"
+        name:
+          type: string
+          description: Full name of the user.
+          example: "Admin System"
+        role:
+          type: string
+          enum: [admin, guru, siswa]
+          description: Role of the user.
+          example: admin
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Password for the user account.
+          example: "strongpassword"
+
+    UpdateUser:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Unique username for the user.
+          example: "admin01_new"
+        name:
+          type: string
+          description: Full name of the user.
+          example: "Admin System New"
+        role:
+          type: string
+          enum: [admin, guru, siswa]
+          description: Role of the user.
+          example: guru
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: New password for the user account (optional).
+          example: "evenstrongerpassword"
+
+    UserResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: User fetched successfully
+        data:
+          $ref: '#/components/schemas/User'
+    
+    ListUsersResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Users fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+
+    Refresh_Token:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the refresh token.
+          example: 1
+        id_user:
+          type: integer
+          description: ID of the user associated with this token.
+          example: 1
+        token:
+          type: string
+          description: The refresh token string.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjcwMDQ0ODAwLCJleHAiOjE2NzAwNDg0MDB9.signature"
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration date and time of the token.
+          example: "2024-01-01T12:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Date and time when the token was created.
+          example: "2024-01-01T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Date and time when the token was last updated.
+          example: "2024-01-01T10:00:00Z"
+
+    Kelas:
+      type: object
+      required:
+        - nama_kelas
+        - kelas_romawi
+      properties:
+        id_kelas:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the kelas.
+          example: 1
+        nama_kelas:
+          type: string
+          description: Name of the kelas (e.g., "10 IPA 1").
+          example: "10 IPA 1"
+        kelas_romawi:
+          type: string
+          description: Roman numeral representation of the kelas level (e.g., "X", "XI", "XII").
+          example: "X"
+      example:
+        nama_kelas: "10 IPA 1"
+        kelas_romawi: "X"
+
+    KelasResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Class fetched successfully
+        data:
+          $ref: '#/components/schemas/Kelas'
+    
+    ListKelasResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Kelas fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Kelas'
+
+    Jurusan:
+      type: object
+      required:
+        - nama_jurusan
+        - deskripsi
+      properties:
+        id_jurusan:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the jurusan.
+          example: 1
+        nama_jurusan:
+          type: string
+          description: Name of the jurusan (e.g., "IPA", "IPS", "Bahasa").
+          example: "IPA"
+        deskripsi:
+          type: string
+          description: Description of the jurusan.
+          example: "Ilmu Pengetahuan Alam"
+      example:
+        nama_jurusan: "IPS"
+        deskripsi: "Ilmu Pengetahuan Sosial"
+
+    JurusanResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Major fetched successfully
+        data:
+          $ref: '#/components/schemas/Jurusan'
+    
+    ListJurusanResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Jurusan fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Jurusan'
+
+    MataPelajaran:
+      type: object
+      required:
+        - nama_mapel
+      properties:
+        id_mapel:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the mata-pelajaran.
+          example: 1
+        nama_mapel:
+          type: string
+          description: Name of the mata-pelajaran (e.g., "Matematika", "Fisika", "Bahasa Indonesia").
+          example: "Matematika"
+      example:
+        nama_mapel: "Fisika"
+
+    MataPelajaranResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Subject fetched successfully
+        data:
+          $ref: '#/components/schemas/MataPelajaran'
+
+    ListMataPelajaranResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Mata Pelajaran fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MataPelajaran'
+
+    Guru:
+      type: object
+      required:
+        - nip
+        - nama_guru
+        - id_mapel
+      properties:
+        id_guru:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the guru.
+          example: 1
+        nip:
+          type: string
+          description: National Educator Identification Number (Nomor Induk Pendidik) for the guru.
+          example: "198001012005011001"
+        nama_guru:
+          type: string
+          description: Full name of the guru.
+          example: "Dra. Siti Aminah"
+        id_mapel:
+          type: integer
+          description: ID of the mata-pelajaran this guru teaches.
+          example: 101
+      example:
+        nip: "198001012005011001"
+        nama_guru: "Dra. Siti Aminah"
+        id_mapel: 1
+
+    GuruResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Teacher fetched successfully
+        data:
+          $ref: '#/components/schemas/Guru'
+    
+    ListGuruResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Guru fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Guru'
+
+    Siswa:
+      type: object
+      required:
+        - nisn
+        - nama_siswa
+        - no_absen
+        - id_kelas
+        - id_jurusan
+      properties:
+        id_siswa:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the siswa.
+          example: 1
+        nisn:
+          type: string
+          description: National Student Identification Number (Nomor Induk Siswa Nasional) for the siswa.
+          example: "0012345678"
+        nama_siswa:
+          type: string
+          description: Full name of the siswa.
+          example: "Rudi Haryanto"
+        no_absen:
+          type: integer
+          description: Absen number of the siswa in their kelas.
+          example: 5
+        id_kelas:
+          type: integer
+          description: ID of the kelas the siswa belongs to.
+          example: 1
+        id_jurusan:
+          type: integer
+          description: ID of the jurusan the siswa belongs to.
+          example: 2
+      example:
+        nisn: "0012345678"
+        nama_siswa: "Rudi Haryanto"
+        no_absen: 5
+        id_kelas: 1
+        id_jurusan: 2
+
+    SiswaResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Student fetched successfully
+        data:
+          $ref: '#/components/schemas/Siswa'
+    
+    ListSiswaResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Siswa fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Siswa'
+
+    Jadwal:
+      type: object
+      required:
+        - id_kelas
+        - id_mapel
+        - id_guru
+        - hari
+        - jam_mulai
+        - jam_selesai
+      properties:
+        id_jadwal:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the jadwal entry.
+          example: 1
+        id_kelas:
+          type: integer
+          description: ID of the kelas for this jadwal.
+          example: 1
+        id_mapel:
+          type: integer
+          description: ID of the mata-pelajaran for this jadwal.
+          example: 101
+        id_guru:
+          type: integer
+          description: ID of the guru for this jadwal.
+          example: 201
+        hari:
+          type: string
+          enum: [Senin, Selasa, Rabu, Kamis, Jumat]
+          description: Day of the week for the jadwal.
+          example: "Senin"
+        jam_mulai:
+          type: string
+          format: time
+          description: Start time of the kelas (HH:MM:SS format).
+          example: "07:30:00"
+        jam_selesai:
+          type: string
+          format: time
+          description: End time of the kelas (HH:MM:SS format).
+          example: "09:00:00"
+      example:
+        id_kelas: 1
+        id_mapel: 1
+        id_guru: 1
+        hari: "Selasa"
+        jam_mulai: "09:15:00"
+        jam_selesai: "10:45:00"
+
+    JadwalResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Schedule fetched successfully
+        data:
+          $ref: '#/components/schemas/Jadwal'
+    
+    ListJadwalResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Jadwal fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Jadwal'
+
+    Presensi:
+      type: object
+      required:
+        - id_siswa
+        - id_jadwal
+      properties:
+        id_presensi:
+          type: integer
+          readOnly: true
+          description: Unique identifier for the presensi record.
+          example: 1
+        id_siswa:
+          type: integer
+          description: ID of the siswa.
+          example: 1
+        id_jadwal:
+          type: integer
+          description: ID of the jadwal entry.
+          example: 1
+        keterangan:
+          type: string
+          nullable: true
+          description: Additional notes for presensi (e.g., reason for absence).
+          example: "Sakit dengan surat dokter"
+        tanggal:
+          type: string
+          format: date
+          nullable: true
+          description: Date of the presensi.
+          example: "2024-06-20"
+        waktu:
+          type: string
+          format: time
+          nullable: true
+          description: Time of presensi (e.g., when marked).
+          example: "07:35:00"
+        hari:
+          type: string
+          enum: [Senin, Selasa, Rabu, Kamis, Jumat]
+          nullable: true
+          description: Day of the week for the presensi.
+          example: "Kamis"
+        status:
+          type: boolean
+          description: True if present, false if absent.
+          default: false
+          example: true
+        gambar:
+          type: string
+          nullable: true
+          description: URL or path to an image associated with the presensi (e.g., proof of presence/absence).
+          example: "/uploads/presensi/img_123.jpg"
+      example:
+        id_siswa: 1
+        id_jadwal: 1
+        keterangan: "Hadir"
+        tanggal: "2024-06-20"
+        waktu: "07:30:00"
+        hari: "Kamis"
+        status: true
+        gambar: null
+    
+    PresensiUpdate:
+      type: object
+      properties:
+        id_siswa:
+          type: integer
+          description: ID of the siswa.
+          example: 1
+        id_jadwal:
+          type: integer
+          description: ID of the jadwal entry.
+          example: 1
+        keterangan:
+          type: string
+          nullable: true
+          description: Additional notes for presensi (e.g., reason for absence).
+          example: "Izin keluarga"
+        tanggal:
+          type: string
+          format: date
+          nullable: true
+          description: Date of the presensi.
+          example: "2024-06-20"
+        waktu:
+          type: string
+          format: time
+          nullable: true
+          description: Time of presensi (e.g., when marked).
+          example: "08:00:00"
+        hari:
+          type: string
+          enum: [Senin, Selasa, Rabu, Kamis, Jumat]
+          nullable: true
+          description: Day of the week for the presensi.
+          example: "Kamis"
+        status:
+          type: boolean
+          description: True if present, false if absent.
+          default: false
+          example: false
+        gambar:
+          type: string
+          nullable: true
+          description: URL or path to an image associated with the presensi (e.g., proof of presence/absence).
+          example: "/uploads/presensi/izin_rudi.jpg"
+
+    PresensiResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Presensi record fetched successfully
+        data:
+          $ref: '#/components/schemas/Presensi'
+
+    ListPresensiResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Presensi records fetched successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Presensi'

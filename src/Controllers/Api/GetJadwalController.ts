@@ -35,7 +35,6 @@ class GetJadwalController extends AuthMiddleWare {
           guru: true,
         },
       });
-
       res.status(200).json({ status: true, data });
     } catch (error) {
       res.status(500).json({ status: false, message: "Failed to retrieve schedules.", error: (error as Error).message });

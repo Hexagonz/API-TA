@@ -15,7 +15,7 @@ class EditSiswaController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.post(
+    this.protectedRouter.put(
       "/siswa/:id",
       this.validator(),
       this.editSiswa.bind(this)

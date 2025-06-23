@@ -42,7 +42,7 @@ class GetJurusanController extends AuthMiddleWare {
         res.status(404).json({
           status: false,
           message: "Tidak ada jurusan ditemukan",
-          data: null,
+          data: [],
         });
         return;
       }

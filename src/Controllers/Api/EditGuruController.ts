@@ -15,7 +15,7 @@ class EditGuruController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.post(
+    this.protectedRouter.put(
       "/guru/:id",
       this.validator(),
       this.addGuru.bind(this)
@@ -110,14 +110,14 @@ class EditGuruController extends AuthMiddleWare {
         .withMessage("field nama_guru cannot be empty!")
         .isLength({ min: 3, max: 60 })
         .withMessage("nama_guru must be between 3 and 60 characters")
-        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _-]).*(?<![_-])$/)
+        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _\-.,]).*(?<![_-])$/)
         .withMessage("Unique characters are not allowed!"),
       check("nip")
         .notEmpty()
         .withMessage("field nip cannot be empty!")
         .isLength({ min: 8, max: 15 })
         .withMessage("nip must be between 8 and 15 characters")
-        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _-]).*(?<![_-])$/)
+        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _\-.,]).*(?<![_-])$/)
         .withMessage("Unique characters are not allowed!"),
       check("id_mapel")
         .notEmpty()

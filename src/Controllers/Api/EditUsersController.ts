@@ -25,7 +25,7 @@ class EditUsersController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.post(
+    this.protectedRouter.put(
       "/users",
       this.validator(),
       this.addUsers.bind(this)

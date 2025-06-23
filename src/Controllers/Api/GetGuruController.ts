@@ -7,7 +7,6 @@ import fs from "fs";
 const router = Router();
 
 class GetGuruController extends AuthMiddleWare {
-
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
   constructor() {
     super(router);
@@ -36,13 +35,16 @@ class GetGuruController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingGuru = await this.guru.findMany();
-
+      const existingGuru = await this.guru.findMany({
+        include: {
+          mapel: true,
+        },
+      });
       if (!existingGuru || existingGuru.length === 0) {
         res.status(404).json({
           status: false,
           message: "Tidak ada guru ditemukan",
-          data: null,
+          data: [],
         });
         return;
       }

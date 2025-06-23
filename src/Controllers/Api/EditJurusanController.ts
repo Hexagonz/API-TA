@@ -15,7 +15,7 @@ class EditJurusanController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.post(
+    this.protectedRouter.put(
       "/jurusan/:id",
       this.validator(),
       this.editJurusan.bind(this)

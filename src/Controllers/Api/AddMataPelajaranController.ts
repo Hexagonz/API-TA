@@ -27,7 +27,7 @@ class AddMataPelajaranController extends AuthMiddleWare {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { nama_mapel } = req.body;
+    const { nama_mapel, deskripsi } = req.body;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
@@ -62,6 +62,7 @@ class AddMataPelajaranController extends AuthMiddleWare {
       const existingMapel = await this.mata_Pelajaran.findFirst({
         where: {
           nama_mapel: nama_mapel,
+          deskripsi: deskripsi,
         },
       });
 
@@ -76,16 +77,13 @@ class AddMataPelajaranController extends AuthMiddleWare {
       const create = await this.mata_Pelajaran.create({
         data: {
           nama_mapel: nama_mapel,
+          deskripsi: deskripsi,
         },
       });
-      const data = {
-        id: create.id_mapel,
-        nama_mapel,
-      };
       res.status(200).json({
         status: true,
         message: "Mata Pelajaran created successfully...",
-        data: data,
+        data: create,
       });
       return;
     } catch (error) {
@@ -104,8 +102,15 @@ class AddMataPelajaranController extends AuthMiddleWare {
       check("nama_mapel")
         .notEmpty()
         .withMessage("field nama_mapel cannot be empty!")
+        .isLength({ min: 2, max: 10 })
+        .withMessage("Mata Pelajaran must be between 2 and 10 characters")
+        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _-]).*(?<![_-])$/)
+        .withMessage("Unique characters are not allowed!"),
+      check("deskripsi")
+        .notEmpty()
+        .withMessage("field deskripsi cannot be empty!")
         .isLength({ min: 4, max: 50 })
-        .withMessage("Mata Pelajaran must be between 4 and 50 characters")
+        .withMessage("Deskripsi must be between 4 and 50 characters")
         .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _-]).*(?<![_-])$/)
         .withMessage("Unique characters are not allowed!"),
     ];

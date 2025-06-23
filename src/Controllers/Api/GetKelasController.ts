@@ -42,7 +42,7 @@ class GetKelasController extends AuthMiddleWare {
         res.status(404).json({
           status: false,
           message: "Tidak ada kelas ditemukan",
-          data: null,
+          data: [],
         });
         return;
       }

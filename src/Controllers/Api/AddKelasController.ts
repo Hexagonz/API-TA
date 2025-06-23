@@ -79,15 +79,10 @@ class AddKelasController extends AuthMiddleWare {
           kelas_romawi: kelas_romawi,
         },
       });
-      const data = {
-        id: create.id_kelas,
-        nama_kelas: nama_kelas,
-        kelas_romawi: kelas_romawi,
-      };
       res.status(200).json({
         status: true,
         message: "Kelas created successfully...",
-        data: data,
+        data: create,
       });
       return;
     } catch (error) {

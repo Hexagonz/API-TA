@@ -42,7 +42,7 @@ class GetUsersController extends AuthMiddleWare {
         res.status(404).json({
           status: false,
           message: "Tidak ada user ditemukan",
-          data: null,
+          data: [],
         });
         return;
       }

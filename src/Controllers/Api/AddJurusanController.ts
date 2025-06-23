@@ -79,15 +79,11 @@ class AddJurusanController extends AuthMiddleWare {
           deskripsi: deskripsi,
         },
       });
-      const data = {
-        id: create.id_jurusan,
-        nama_jurusan: nama_jurusan,
-        deskripsi: deskripsi
-      };
+
       res.status(200).json({
         status: true,
         message: "Jurusan created successfully...",
-        data: data,
+        data: create,
       });
       return;
     } catch (error) {

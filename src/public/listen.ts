@@ -19,7 +19,7 @@ export const options: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ["./src/public/swagger/*.ts"], 
+  apis: ["./src/public/swagger/*.yaml"], 
 };
 
 const swaggerSpec = swaggerJsdoc(options);
