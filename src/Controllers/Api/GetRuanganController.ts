@@ -5,7 +5,7 @@ import fs from "fs";
 
 const router = Router();
 
-class GetRuanganByIdController extends AuthMiddleWare {
+class GetRuanganController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
@@ -14,15 +14,14 @@ class GetRuanganByIdController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.get("/ruang-kelas/:id", this.getRuanganById.bind(this));
+    this.protectedRouter.get("/ruang-kelas", this.getRuangKelas.bind(this));
   }
 
-  private async getRuanganById(
+  private async getRuangKelas(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
 
     try {
@@ -39,16 +38,15 @@ class GetRuanganByIdController extends AuthMiddleWare {
         return;
       }
 
-      const existingRuangan = await this.ruang_Kelas.findUnique({
-        where: { id_ruang: Number(id) },
+      const existingRuangan = await this.ruang_Kelas.findMany({
         include: { jurusan: true },
       });
 
-      if (!existingRuangan) {
+      if (!existingRuangan || existingRuangan.length === 0) {
         res.status(404).json({
           status: false,
-          message: "Ruangan tidak ditemukan",
-          data: null,
+          message: "Tidak ada ruang kelas ditemukan",
+          data: [],
         });
         return;
       }
@@ -59,7 +57,7 @@ class GetRuanganByIdController extends AuthMiddleWare {
         data: existingRuangan,
       });
     } catch (error) {
-      console.error("Gagal mengambil data ruangan:", error);
+      console.error("Gagal mengambil ruang kelas:", error);
       res.status(500).json({
         status: false,
         message: "Terjadi kesalahan pada server",
@@ -69,4 +67,4 @@ class GetRuanganByIdController extends AuthMiddleWare {
   }
 }
 
-export default GetRuanganByIdController;
+export default GetRuanganController;

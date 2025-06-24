@@ -27,13 +27,13 @@ class AddSiswaController extends AuthMiddleWare {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { nama_siswa, nisn, no_absen, id_kelas, id_jurusan } = req.body;
+    const { nama_siswa, nisn, no_absen, id_kelas, id_jurusan, id_ruang } = req.body;
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(
       authHeader as string,
       this.privateKey
     ) as JwtPayload;
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
       res.status(403).json({
         status: false,
         message: "Akses ditolak: Hanya admin yang bisa melihat data user",
@@ -64,6 +64,24 @@ class AddSiswaController extends AuthMiddleWare {
           nisn: nisn,
         },
       });
+
+      const existingAbsenInKelasJurusan = await this.siswa.findFirst({
+        where: {
+          id_kelas: Number(id_kelas),
+          id_jurusan: Number(id_jurusan),
+          no_absen: Number(no_absen),
+          id_ruang: Number(id_ruang)
+        },
+      });
+
+      if (existingAbsenInKelasJurusan) {
+        res.status(400).json({
+          status: false,
+          message: `Siswa dengan no absen ${no_absen} sudah terdaftar di kelas ${id_kelas} dan jurusan ${id_jurusan}`,
+          data: null,
+        });
+        return;
+      }
 
       const existingKelas = await this.kelas.findUnique({
         where: { id_kelas: Number(id_kelas) },
@@ -102,6 +120,7 @@ class AddSiswaController extends AuthMiddleWare {
           no_absen,
           id_kelas,
           id_jurusan,
+          id_ruang
         },
       });
       res.status(200).json({

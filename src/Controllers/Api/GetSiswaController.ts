@@ -1,5 +1,4 @@
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
-import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response, Router } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import fs from "fs";
@@ -28,7 +27,7 @@ class GetSiswaController extends AuthMiddleWare {
       authHeader as string,
       this.privateKey
     ) as JwtPayload;
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
       res.status(403).json({
         status: false,
         message: "Akses ditolak: Hanya admin yang bisa melihat data user",
@@ -36,7 +35,12 @@ class GetSiswaController extends AuthMiddleWare {
       return;
     }
     try {
-      const existingSiswa = await this.siswa.findMany();
+      const existingSiswa = await this.siswa.findMany({
+        include: {
+          kelas: true,
+          jurusan: true
+        }
+      });
 
       if (!existingSiswa || existingSiswa.length === 0) {
         res.status(404).json({

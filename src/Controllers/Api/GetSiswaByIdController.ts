@@ -28,7 +28,7 @@ class GetSiswaByIdController extends AuthMiddleWare {
       authHeader as string,
       this.privateKey
     ) as JwtPayload;
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
       res.status(403).json({
         status: false,
         message: "Akses ditolak: Hanya admin yang bisa melihat data user",
@@ -37,9 +37,13 @@ class GetSiswaByIdController extends AuthMiddleWare {
     }
     try {
       const existingSiswa = await this.siswa.findUnique({
-        where : {
-            id_siswa: Number(id)
-        }
+        where: {
+          id_siswa: Number(id),
+        },
+        include: {
+          kelas: true,
+          jurusan: true,
+        },
       });
 
       if (!existingSiswa) {

@@ -1,12 +1,11 @@
 import AuthMiddleWare from "@/middleware/AuthMiddleware";
-import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response, Router } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import fs from "fs";
 
 const router = Router();
 
-class DeleteMataPelajaranController extends AuthMiddleWare {
+class DeleteRuanganController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
@@ -16,66 +15,68 @@ class DeleteMataPelajaranController extends AuthMiddleWare {
 
   private initializeRoutes(): void {
     this.protectedRouter.delete(
-      "/mata-pelajaran/:id",
-      this.deleteMapel.bind(this)
+      "/ruang-kelas/:id",
+      this.deleteRuangan.bind(this)
     );
   }
 
-  private async deleteMapel(
+  private async deleteRuangan(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(
-      authHeader as string,
-      this.privateKey
-    ) as JwtPayload;
-    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
-      res.status(403).json({
-        status: false,
-        message: "Akses ditolak: Hanya admin yang bisa melihat data user",
-      });
-      return;
-    }
+
     try {
-      const existingUser = await this.mata_Pelajaran.findUnique({
+      const decoded = jwt.verify(
+        authHeader as string,
+        this.privateKey
+      ) as JwtPayload;
+
+      if (decoded.role !== "admin" && decoded.role !== "super_admin") {
+        res.status(403).json({
+          status: false,
+          message: "Akses ditolak: Hanya admin yang bisa menghapus data ruang kelas",
+        });
+        return;
+      }
+
+      const existingRuangan = await this.ruang_Kelas.findUnique({
         where: {
-          id_mapel: Number(id),
+          id_ruang: Number(id),
         },
       });
 
-      if (!existingUser) {
+      if (!existingRuangan) {
         res.status(404).json({
           status: false,
-          message: "Mata Pelajaran tidak ditemukan",
+          message: "Ruangan tidak ditemukan",
           data: null,
         });
         return;
       }
-      const existingMapel = await this.mata_Pelajaran.delete({
+
+      const deletedRuangan = await this.ruang_Kelas.delete({
         where: {
-          id_mapel: Number(id),
+          id_ruang: Number(id),
         },
       });
 
       res.status(200).json({
         status: true,
-        message: "Berhasil menghapus data Mata Pelajaran",
-        data: existingMapel,
+        message: "Berhasil menghapus data Ruangan",
+        data: deletedRuangan,
       });
-      return;
     } catch (error) {
-      console.error(error);
+      console.error("Error saat menghapus ruangan:", error);
       res.status(500).json({
         status: false,
         message: "Terjadi kesalahan pada server",
         error: (error as Error).message,
       });
-      return;
     }
   }
 }
 
-export default DeleteMataPelajaranController;
+export default DeleteRuanganController;

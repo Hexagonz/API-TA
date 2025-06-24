@@ -5,7 +5,8 @@ import fs from "fs";
 import { check, ValidationChain, validationResult } from "express-validator";
 
 const router = Router();
-class EditGuruController extends AuthMiddleWare {
+
+class AddRuanganController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
@@ -14,20 +15,19 @@ class EditGuruController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.put(
-      "/guru/:id",
+    this.protectedRouter.post(
+      "/ruang-kelas",
       this.validator(),
-      this.addGuru.bind(this)
+      this.addRuangan.bind(this)
     );
   }
 
-  private async addGuru(
+  private async addRuangan(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { nama_guru, nip, id_mapel } = req.body;
-    const { id } = req.params;
+    const { nomor_ruang, id_jurusan } = req.body;
     const authHeader = req.headers.authorization?.split(" ")[1];
 
     try {
@@ -35,10 +35,11 @@ class EditGuruController extends AuthMiddleWare {
         authHeader as string,
         this.privateKey
       ) as JwtPayload;
+
       if (decoded.role !== "admin" && decoded.role !== "super_admin") {
         res.status(403).json({
           status: false,
-          message: "Akses ditolak: Hanya admin yang bisa menambah data guru",
+          message: "Akses ditolak: Hanya admin yang bisa menambah data ruang_Kelas",
         });
         return;
       }
@@ -52,48 +53,50 @@ class EditGuruController extends AuthMiddleWare {
         res.status(400).json({ status: false, errors: validationErrors });
         return;
       }
-
-      const existingGuru = await this.guru.findFirst({ where: { nip } });
-      if (existingGuru && existingGuru.id_guru != Number(id)) {
-        res.status(409).json({
-          status: false,
-          message: `NIP Guru ${nip} sudah terdaftar`,
-          data: null,
-        });
-        return;
-      }
-
-      const existingMapel = await this.mata_Pelajaran.findUnique({
-        where: { id_mapel: Number(id_mapel) },
+      const existingRuangan = await this.ruang_Kelas.findFirst({
+        where: {
+          nomor_ruang: Number(nomor_ruang),
+          id_jurusan: Number(id_jurusan),
+        },
       });
 
-      if (!existingMapel) {
-        res.status(400).json({
+      if (existingRuangan) {
+        res.status(409).json({
           status: false,
-          message: `ID Mapel ${id_mapel} tidak ditemukan`,
+          message: `Ruangan nomor ${nomor_ruang} untuk jurusan tersebut sudah terdaftar`,
           data: null,
         });
         return;
       }
 
-      const update = await this.guru.update({
-        where: {
-          id_guru: Number(id),
-        },
+      const existingJurusan = await this.jurusan.findFirst({
+        where: { id_jurusan: id_jurusan },
+      });
+
+      if (!existingJurusan) {
+        res.status(400).json({
+          status: false,
+          message: `ID jurusan ${id_jurusan} tidak ditemukan`,
+          data: null,
+        });
+        return;
+      }
+
+      // ✅ Simpan ruangan
+      const create = await this.ruang_Kelas.create({
         data: {
-          nama_guru,
-          nip,
-          id_mapel,
+          nomor_ruang: Number(nomor_ruang),
+          id_jurusan: Number(id_jurusan),
         },
       });
 
       res.status(201).json({
         status: true,
-        message: "Guru berhasil diedit",
-        data: update,
+        message: "Ruangan berhasil ditambahkan",
+        data: create,
       });
     } catch (error) {
-      console.error("Error saat menambahkan guru:", error);
+      console.error("Error saat menambahkan ruang_Kelas:", error);
       res.status(500).json({
         status: false,
         message: "Terjadi kesalahan pada server",
@@ -104,27 +107,18 @@ class EditGuruController extends AuthMiddleWare {
 
   private validator(): ValidationChain[] {
     return [
-      check("nama_guru")
+      check("nomor_ruang")
         .notEmpty()
-        .withMessage("field nama_guru cannot be empty!")
-        .isLength({ min: 3, max: 60 })
-        .withMessage("nama_guru must be between 3 and 60 characters")
-        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _\-.,]).*(?<![_-])$/)
-        .withMessage("Unique characters are not allowed!"),
-      check("nip")
+        .withMessage("Field nomor_ruang tidak boleh kosong!")
+        .isInt({ min: 1, max: 255 })
+        .withMessage("nomor_ruang harus berupa angka antara 1 sampai 255"),
+      check("id_jurusan")
         .notEmpty()
-        .withMessage("field nip cannot be empty!")
-        .isLength({ min: 8, max: 15 })
-        .withMessage("nip must be between 8 and 15 characters")
-        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _\-.,]).*(?<![_-])$/)
-        .withMessage("Unique characters are not allowed!"),
-      check("id_mapel")
-        .notEmpty()
-        .withMessage("Field id_mapel cannot be empty!")
+        .withMessage("Field id_jurusan tidak boleh kosong!")
         .isNumeric()
-        .withMessage("Field id_mapel must be a number!"),
+        .withMessage("Field id_jurusan harus berupa angka!"),
     ];
   }
 }
 
-export default EditGuruController;
+export default AddRuanganController;

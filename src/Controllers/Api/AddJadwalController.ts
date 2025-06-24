@@ -29,7 +29,7 @@ class AddJadwalController extends AuthMiddleWare {
     const authHeader = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(authHeader as string, this.privateKey) as JwtPayload;
 
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
       res.status(403).json({
         status: false,
         message: "Access denied: Only admin can create schedule.",

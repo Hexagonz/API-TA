@@ -28,7 +28,7 @@ class GetUsersController extends AuthMiddleWare {
       authHeader as string,
       this.privateKey
     ) as JwtPayload;
-    if (decoded.role !== "admin") {
+    if ( decoded.role !== "super_admin") {
       res.status(403).json({
         status: false,
         message: "Akses ditolak: Hanya admin yang bisa melihat data user",

@@ -50,6 +50,7 @@ model Jurusan {
   deskripsi    String @db.VarChar(50)
 
   siswa Siswa[]
+  ruang Ruang_Kelas[]
 }
 
 model Mata_Pelajaran {
@@ -72,6 +73,14 @@ model Guru {
   jadwal Jadwal[]
 }
 
+model Ruang_Kelas {
+  id_ruang Int @id @default(autoincrement())
+  nomor_ruang Int @db.TinyInt
+  id_jurusan Int
+
+  jurusan   Jurusan   @relation(fields: [id_jurusan], references: [id_jurusan], onUpdate: Cascade, onDelete: Cascade)
+  siswa Siswa[]
+}
 model Siswa {
   id_siswa   Int    @id @default(autoincrement())
   nisn       String @unique @db.VarChar(20)
@@ -79,9 +88,11 @@ model Siswa {
   no_absen   Int    @db.TinyInt
   id_kelas   Int
   id_jurusan Int
-
+  id_ruang   Int
+  
   kelas   Kelas   @relation(fields: [id_kelas], references: [id_kelas], onUpdate: Cascade, onDelete: Cascade)
   jurusan Jurusan @relation(fields: [id_jurusan], references: [id_jurusan], onUpdate: Cascade, onDelete: Cascade)
+  ruang Ruang_Kelas @relation(fields: [id_ruang], references: [id_ruang], onUpdate: Cascade, onDelete: Cascade)
 
   presensi Presensi[]
 }
@@ -130,4 +141,5 @@ enum Role {
   admin
   guru
   siswa
+  super_admin
 }

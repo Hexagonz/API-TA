@@ -19,7 +19,7 @@ async function main() {
           username: '3202216016',
           name: 'Muhammad Fitriadi',
           password: bcrypt.hashSync('admin12345', salt),
-          role: 'admin',
+          role: 'super_admin',
         },
       });
       console.log(admin);
