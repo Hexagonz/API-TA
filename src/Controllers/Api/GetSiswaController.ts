@@ -38,7 +38,8 @@ class GetSiswaController extends AuthMiddleWare {
       const existingSiswa = await this.siswa.findMany({
         include: {
           kelas: true,
-          jurusan: true
+          jurusan: true,
+          ruang: true
         }
       });
 
@@ -46,7 +47,7 @@ class GetSiswaController extends AuthMiddleWare {
         res.status(404).json({
           status: false,
           message: "Tidak ada siswa ditemukan",
-          data: null,
+          data: [],
         });
         return;
       }

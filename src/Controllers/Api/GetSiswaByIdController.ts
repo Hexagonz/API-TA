@@ -43,6 +43,7 @@ class GetSiswaByIdController extends AuthMiddleWare {
         include: {
           kelas: true,
           jurusan: true,
+          ruang: true
         },
       });
 

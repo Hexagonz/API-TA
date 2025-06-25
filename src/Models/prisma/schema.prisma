@@ -80,6 +80,7 @@ model Ruang_Kelas {
 
   jurusan   Jurusan   @relation(fields: [id_jurusan], references: [id_jurusan], onUpdate: Cascade, onDelete: Cascade)
   siswa Siswa[]
+  presensi Presensi[]
 }
 model Siswa {
   id_siswa   Int    @id @default(autoincrement())
@@ -118,6 +119,7 @@ model Presensi {
   id_presensi Int       @id @default(autoincrement())
   id_siswa    Int
   id_jadwal   Int
+  id_ruang    Int
   keterangan  String?
   tanggal     DateTime? @db.DateTime()
   waktu       DateTime? @db.Time()
@@ -125,6 +127,8 @@ model Presensi {
   status      Boolean   @default(false)
   gambar      String?   @db.VarChar(100)
 
+  
+  ruang  Ruang_Kelas  @relation(fields: [id_ruang], references: [id_ruang], onUpdate: Cascade, onDelete: Cascade)
   siswa  Siswa  @relation(fields: [id_siswa], references: [id_siswa], onUpdate: Cascade, onDelete: Cascade)
   jadwal Jadwal @relation(fields: [id_jadwal], references: [id_jadwal], onUpdate: Cascade, onDelete: Cascade)
 }
