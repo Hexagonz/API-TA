@@ -62,7 +62,7 @@ class DeleteRuanganController extends AuthMiddleWare {
           id_ruang: Number(id),
         },
       });
-
+      
       res.status(200).json({
         status: true,
         message: "Berhasil menghapus data Ruangan",

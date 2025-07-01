@@ -5,7 +5,7 @@ import fs from "fs";
 
 const router = Router();
 
-class GetRuanganByIdController extends AuthMiddleWare {
+class GetMataPelajaranByIdController extends AuthMiddleWare {
   private readonly privateKey = fs.readFileSync("./lib/public.key", "utf-8");
 
   constructor() {
@@ -14,40 +14,38 @@ class GetRuanganByIdController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.get("/ruang-kelas/:id", this.getRuanganById.bind(this));
+    this.protectedRouter.get("/mata-pelajaran/:id", this.getMapelId.bind(this));
   }
 
-  private async getRuanganById(
+  private async getMapelId(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
-
+    const decoded = jwt.verify(
+      authHeader as string,
+      this.privateKey
+    ) as JwtPayload;
+    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
+      res.status(403).json({
+        status: false,
+        message: "Akses ditolak: Hanya admin yang bisa melihat data user",
+      });
+      return;
+    }
     try {
-      const decoded = jwt.verify(
-        authHeader as string,
-        this.privateKey
-      ) as JwtPayload;
-
-      if (decoded.role !== "admin" && decoded.role !== "super_admin") {
-        res.status(403).json({
-          status: false,
-          message: "Akses ditolak: Hanya admin yang bisa melihat data ruang kelas",
-        });
-        return;
-      }
-
-      const existingRuangan = await this.ruang_Kelas.findUnique({
-        where: { id_ruang: Number(id) },
-        include: { jurusan: true },
+      const existingUser = await this.mata_Pelajaran.findUnique({
+        where : {
+            id_mapel: Number(id)
+        }
       });
 
-      if (!existingRuangan) {
+      if (!existingUser) {
         res.status(404).json({
           status: false,
-          message: "Ruangan tidak ditemukan",
+          message: "Mata Pelajaran tidak ditemukan",
           data: null,
         });
         return;
@@ -55,18 +53,20 @@ class GetRuanganByIdController extends AuthMiddleWare {
 
       res.status(200).json({
         status: true,
-        message: "Berhasil mengambil data ruang kelas",
-        data: existingRuangan,
+        message: "Berhasil mengambil data Mata Pelajaran",
+        data: existingUser,
       });
+      return;
     } catch (error) {
-      console.error("Gagal mengambil data ruangan:", error);
+      console.error(error);
       res.status(500).json({
         status: false,
         message: "Terjadi kesalahan pada server",
         error: (error as Error).message,
       });
+      return;
     }
   }
 }
 
-export default GetRuanganByIdController;
+export default GetMataPelajaranByIdController;

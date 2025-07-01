@@ -11,13 +11,18 @@ import sweggerSpec from "../public/listen";
 import swaggerUi from "swagger-ui-express";
 import { rateLimit } from "express-rate-limit";
 import cookieParser from "cookie-parser";
-import { scheduleTokenCleanup } from "@/sever";
+import http from "http";
+// import { scheduleTokenCleanup } from "@/sever";
 import cors from "cors";
-
+import WebSocketController from "@/Controllers/Api/WebSocketController";
 const app: Application = express();
 const port: number | string = process.env.PORT_SERVER || 3001;
 const host: string = process.env.HOST || "http://localhost";
 const DEFAULT: string = "DefaultUrlController.ts";
+const server = http.createServer(app);
+
+// Inisialisasi WebSocket di atas HTTP server
+new WebSocketController(server);
 
 const controllersFolder = path.join(__dirname, "../Controllers/Api");
 const files = fs.readdirSync(controllersFolder);
@@ -29,7 +34,7 @@ const files = fs.readdirSync(controllersFolder);
 // 	legacyHeaders: false,
 // });
 
-scheduleTokenCleanup();
+// scheduleTokenCleanup();
 files.filter(async (file) => {
   const filePath = path.join(controllersFolder, file);
   if (file.endsWith("Controller.ts")) {
@@ -37,10 +42,7 @@ files.filter(async (file) => {
       .then((controllerModule) => {
         const controller = new controllerModule.default();
         app.use(
-          cors({
-            origin: "http://localhost:5173",
-            credentials: true,
-          })
+          cors()
         );
         app.use(express.urlencoded({ extended: true }));
         app.use(cookieParser());
@@ -66,6 +68,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://${host}:${port}`);
+server.listen(port, () => {
+  console.log(`Server running at ${host}:${port}`);
 });
