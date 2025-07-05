@@ -22,12 +22,23 @@ class AddJadwalController extends AuthMiddleWare {
       this.addJadwal.bind(this)
     );
   }
-
-  private async addJadwal(req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { id_kelas, id_mapel, id_guru, hari, jam_mulai, jam_selesai } = req.body;
+  private toTimeOnlyDate(jam: string): Date {
+    const [hour, minute] = jam.split(":").map(Number);
+    return new Date(Date.UTC(1970, 0, 1, hour, minute, 0));
+  }
+  private async addJadwal(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { id_kelas, id_guru, id_ruang, hari, jam_mulai, jam_selesai } =
+      req.body;
 
     const authHeader = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(authHeader as string, this.privateKey) as JwtPayload;
+    const decoded = jwt.verify(
+      authHeader as string,
+      this.privateKey
+    ) as JwtPayload;
 
     if (decoded.role !== "admin" && decoded.role !== "super_admin") {
       res.status(403).json({
@@ -48,14 +59,24 @@ class AddJadwalController extends AuthMiddleWare {
     }
 
     try {
+      const jamMulaiDate = this.toTimeOnlyDate(jam_mulai);
+      const jamSelesaiDate = this.toTimeOnlyDate(jam_selesai);
+
+      if (jamSelesaiDate <= jamMulaiDate) {
+        res.status(400).json({
+          status: false,
+          message: "jam_selesai harus lebih besar dari jam_mulai.",
+        });
+        return;
+      }
       const existingJadwal = await this.jadwal.findFirst({
         where: {
           id_kelas,
-          id_mapel,
           id_guru,
+          id_ruang,
           hari,
-          jam_mulai,
-          jam_selesai,
+          jam_mulai: jamMulaiDate,
+          jam_selesai: jamSelesaiDate,
         },
       });
 
@@ -67,14 +88,47 @@ class AddJadwalController extends AuthMiddleWare {
         return;
       }
 
+      const kelas = await this.kelas.findUnique({
+        where: { id_kelas },
+      });
+      if (!kelas) {
+        res.status(404).json({
+          status: false,
+          message: `Kelas dengan id ${id_kelas} tidak ditemukan.`,
+        });
+        return;
+      }
+
+      const guru = await this.guru.findUnique({
+        where: { id_guru },
+      });
+      if (!guru) {
+        res.status(404).json({
+          status: false,
+          message: `Guru dengan id ${id_guru} tidak ditemukan.`,
+        });
+        return;
+      }
+
+      const ruang_Kelas = await this.ruang_Kelas.findUnique({
+        where: { id_ruang },
+      });
+      if (!ruang_Kelas) {
+        res.status(404).json({
+          status: false,
+          message: `Ruang Kelas dengan id ${id_ruang} tidak ditemukan.`,
+        });
+        return;
+      }
+
       const newJadwal = await this.jadwal.create({
         data: {
           id_kelas,
-          id_mapel,
           id_guru,
+          id_ruang,
           hari,
-          jam_mulai,
-          jam_selesai,
+          jam_mulai: jamMulaiDate,
+          jam_selesai: jamSelesaiDate,
         },
       });
 
@@ -83,7 +137,6 @@ class AddJadwalController extends AuthMiddleWare {
         message: "Schedule and presensi created successfully.",
         data: newJadwal,
       });
-
     } catch (error) {
       console.error(error);
       res.status(500).json({
@@ -97,8 +150,8 @@ class AddJadwalController extends AuthMiddleWare {
   private validator(): ValidationChain[] {
     return [
       check("id_kelas").notEmpty().withMessage("id_kelas is required.").isInt(),
-      check("id_mapel").notEmpty().withMessage("id_mapel is required.").isInt(),
       check("id_guru").notEmpty().withMessage("id_guru is required.").isInt(),
+      check("id_ruang").notEmpty().withMessage("id_ruang is required.").isInt(),
       check("hari")
         .notEmpty()
         .withMessage("hari is required.")

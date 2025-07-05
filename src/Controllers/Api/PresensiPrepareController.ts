@@ -72,7 +72,6 @@ class PreparePresensiController extends AuthMiddleWare {
             where: {
               id_siswa: siswa.id_siswa,
               id_jadwal: jadwal.id_jadwal,
-              id_ruang: ruang.id_ruang,
               tanggal: {
                 gte: new Date(tanggalHariIni.setHours(0, 0, 0, 0)),
                 lte: new Date(tanggalHariIni.setHours(23, 59, 59, 999)),
@@ -85,7 +84,6 @@ class PreparePresensiController extends AuthMiddleWare {
               data: {
                 id_siswa: siswa.id_siswa,
                 id_jadwal: jadwal.id_jadwal,
-                id_ruang: ruang.id_ruang,
                 hari: jadwal.hari,
                 tanggal: new Date(),
                 status: false,

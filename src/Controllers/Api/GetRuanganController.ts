@@ -33,13 +33,19 @@ class GetRuanganController extends AuthMiddleWare {
       if (decoded.role !== "admin" && decoded.role !== "super_admin") {
         res.status(403).json({
           status: false,
-          message: "Akses ditolak: Hanya admin yang bisa melihat data ruang kelas",
+          message:
+            "Akses ditolak: Hanya admin yang bisa melihat data ruang kelas",
         });
         return;
       }
 
       const existingRuangan = await this.ruang_Kelas.findMany({
         include: { jurusan: true },
+        orderBy: {
+          jurusan: {
+            nama_jurusan: "asc",
+          },
+        },
       });
 
       if (!existingRuangan || existingRuangan.length === 0) {

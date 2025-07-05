@@ -16,15 +16,18 @@ class WebSocketController {
 
       ws.on("message", async (data: WebSocket.RawData) => {
         try {
-          const { image } = JSON.parse(data.toString());
-
+          const { image, nim } = JSON.parse(data.toString());
+          if (!image || !nim) {
+            ws.send(JSON.stringify({ error: "Image dan NIM wajib dikirim" }));
+            return;
+          }
           const response = await axios.post("http://localhost:5005/predict", {
             image,
+            nim,
           });
 
           const result = response.data?.result || "Tidak Dikenal";
           ws.send(JSON.stringify({ result }));
-
         } catch (error: any) {
           console.error("[Recognition Error]", error.message);
           const errMsg =

@@ -20,10 +20,15 @@ class GetJadwalController extends AuthMiddleWare {
 
   private async getAllJadwal(req: Request, res: Response): Promise<void> {
     const authHeader = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(authHeader as string, this.privateKey) as JwtPayload;
+    const decoded = jwt.verify(
+      authHeader as string,
+      this.privateKey
+    ) as JwtPayload;
 
     if (decoded.role !== "admin" && decoded.role !== "super_admin") {
-      res.status(403).json({ status: false, message: "Only admin can view schedules." });
+      res
+        .status(403)
+        .json({ status: false, message: "Only admin can view schedules." });
       return;
     }
 
@@ -31,13 +36,33 @@ class GetJadwalController extends AuthMiddleWare {
       const data = await this.jadwal.findMany({
         include: {
           kelas: true,
-          mapel: true,
-          guru: true,
+          guru: {
+            include: {
+              mapel: true,
+            },
+          },
+          ruang: {
+            include : {
+              jurusan: true
+            }
+          }
         },
       });
-      res.status(200).json({ status: true, data });
+      res
+        .status(200)
+        .json({
+          status: true,
+          message: "Berhasil mengambil data Jadwal",
+          data,
+        });
     } catch (error) {
-      res.status(500).json({ status: false, message: "Failed to retrieve schedules.", error: (error as Error).message });
+      res
+        .status(500)
+        .json({
+          status: false,
+          message: "Failed to retrieve schedules.",
+          error: (error as Error).message,
+        });
     }
   }
 }

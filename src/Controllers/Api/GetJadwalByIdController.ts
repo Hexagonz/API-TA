@@ -33,8 +33,12 @@ class GetJadwalByIdController extends AuthMiddleWare {
         where: { id_jadwal: Number(id) },
         include: {
           kelas: true,
-          mapel: true,
           guru: true,
+          ruang: {
+            include : {
+              jurusan: true
+            }
+          }
         },
       });
 

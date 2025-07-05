@@ -42,6 +42,7 @@ model Kelas {
 
   siswa  Siswa[]
   jadwal Jadwal[]
+  @@map("kelas")
 }
 
 model Jurusan {
@@ -59,7 +60,6 @@ model Mata_Pelajaran {
   deskripsi  String @db.VarChar(50)
   
   guru   Guru[]
-  jadwal Jadwal[]
 }
 
 model Guru {
@@ -71,6 +71,7 @@ model Guru {
   mapel Mata_Pelajaran @relation(fields: [id_mapel], references: [id_mapel], onUpdate: Cascade, onDelete: Cascade)
 
   jadwal Jadwal[]
+  @@map("guru")
 }
 
 model Ruang_Kelas {
@@ -80,8 +81,11 @@ model Ruang_Kelas {
 
   jurusan   Jurusan   @relation(fields: [id_jurusan], references: [id_jurusan], onUpdate: Cascade, onDelete: Cascade)
   siswa Siswa[]
-  presensi Presensi[]
+  jadwal Jadwal[]
+
+  @@map("ruang_Kelas")
 }
+
 model Siswa {
   id_siswa   Int    @id @default(autoincrement())
   nisn       String @unique @db.VarChar(20)
@@ -101,15 +105,15 @@ model Siswa {
 model Jadwal {
   id_jadwal   Int      @id @default(autoincrement())
   id_kelas    Int
-  id_mapel    Int
   id_guru     Int
+  id_ruang    Int
   hari        Hari
   jam_mulai   DateTime @db.Time()
   jam_selesai DateTime @db.Time()
-
-  kelas   Kelas          @relation(fields: [id_kelas], references: [id_kelas])
-  mapel   Mata_Pelajaran @relation(fields: [id_mapel], references: [id_mapel])
-  guru    Guru           @relation(fields: [id_guru], references: [id_guru])
+  
+  ruang  Ruang_Kelas  @relation(fields: [id_ruang], references: [id_ruang], onUpdate: Cascade, onDelete: Cascade)
+  kelas   Kelas          @relation(fields: [id_kelas], references: [id_kelas], onUpdate: Cascade, onDelete: Cascade )
+  guru    Guru           @relation(fields: [id_guru], references: [id_guru] , onUpdate: Cascade, onDelete: Cascade)
   absensi Presensi[]
 
   @@map("jadwal")
@@ -119,7 +123,6 @@ model Presensi {
   id_presensi Int       @id @default(autoincrement())
   id_siswa    Int
   id_jadwal   Int
-  id_ruang    Int
   keterangan  String?
   tanggal     DateTime? @db.DateTime()
   waktu       DateTime? @db.Time()
@@ -128,7 +131,7 @@ model Presensi {
   gambar      String?   @db.VarChar(100)
 
   
-  ruang  Ruang_Kelas  @relation(fields: [id_ruang], references: [id_ruang], onUpdate: Cascade, onDelete: Cascade)
+  
   siswa  Siswa  @relation(fields: [id_siswa], references: [id_siswa], onUpdate: Cascade, onDelete: Cascade)
   jadwal Jadwal @relation(fields: [id_jadwal], references: [id_jadwal], onUpdate: Cascade, onDelete: Cascade)
 }

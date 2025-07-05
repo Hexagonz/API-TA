@@ -15,6 +15,7 @@ import http from "http";
 // import { scheduleTokenCleanup } from "@/sever";
 import cors from "cors";
 import WebSocketController from "@/Controllers/Api/WebSocketController";
+
 const app: Application = express();
 const port: number | string = process.env.PORT_SERVER || 3001;
 const host: string = process.env.HOST || "http://localhost";
@@ -42,7 +43,10 @@ files.filter(async (file) => {
       .then((controllerModule) => {
         const controller = new controllerModule.default();
         app.use(
-          cors()
+          cors({
+            origin: "http://localhost:5173",
+            credentials: true, 
+          })
         );
         app.use(express.urlencoded({ extended: true }));
         app.use(cookieParser());

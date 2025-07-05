@@ -132,6 +132,7 @@ class LoginController extends PrismaClient {
       data: {
         userId: existingUser.id,
         username: existingUser.username,
+        name: existingUser.name,
         role: existingUser.role,
         accses_token: token,
         refresh_token: refreshToken,

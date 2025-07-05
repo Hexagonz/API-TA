@@ -34,19 +34,18 @@ class ResetPasswordController extends AuthMiddleWare {
   }
 
   private async resetPassword(
-    req: Request<{ password: string; token: string }>,
+    req: Request<{}, {}, { password: string; token: string }>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     const { password, token } = req.body;
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      const validationErrors: Array<{ param: string; msg: string }> = errors
-        .array()
-        .map((error) => ({
-          param: (error as any).path,
-          msg: (error as any).msg,
-        }));
+      const validationErrors = errors.array().map((error) => ({
+        param: (error as any).path,
+        msg: (error as any).msg,
+      }));
 
       res.status(400).json({
         status: false,
@@ -59,26 +58,28 @@ class ResetPasswordController extends AuthMiddleWare {
     }
 
     try {
-      const decToken = this.security.decrypt(token) as string;
       const passwordToken = jwt.verify(
-        decToken,
-        fs.readFileSync("./lib/key-password/public.key", "utf-8")
+        token,
+        fs.readFileSync("./lib/key-password/public.key", "utf-8"),
+        { algorithms: ["RS256"] } 
       ) as JwtPayload;
-      const salt = bcrypt.genSaltSync(10);
-      const hash = bcrypt.hashSync(password, salt);
+
+      const hash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+
       this.user = {
         username: passwordToken.username,
         password: hash,
       };
+
       const data = await this.users.update({
         where: { username: passwordToken.username },
-        data: this.users,
+        data: this.user,
       });
 
       res.status(201).json({
         status: true,
         data,
-        message: "Succses Resset Password User...",
+        message: "Success Reset Password User...",
       });
     } catch (err) {
       res.status(400).json({
@@ -89,7 +90,6 @@ class ResetPasswordController extends AuthMiddleWare {
       });
       return next(err);
     }
-    return;
   }
 
   private async requestResetPassword(
@@ -98,7 +98,6 @@ class ResetPasswordController extends AuthMiddleWare {
     next: NextFunction
   ): Promise<void> {
     let token = req.headers.authorization?.split(" ")[1];
-    token = this.security.decrypt(token as string);
     let reqToken;
     try {
       const decodedToken = jwt.verify(
@@ -130,7 +129,6 @@ class ResetPasswordController extends AuthMiddleWare {
       });
       return next(err);
     }
-    await this.$disconnect();
   }
 
   private validator(): ValidationChain[] {
