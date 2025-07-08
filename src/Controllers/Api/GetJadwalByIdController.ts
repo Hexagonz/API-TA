@@ -21,10 +21,19 @@ class GetJadwalByIdController extends AuthMiddleWare {
   private async getJadwalById(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const authHeader = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(authHeader as string, this.privateKey) as JwtPayload;
+    const decoded = jwt.verify(
+      authHeader as string,
+      this.privateKey
+    ) as JwtPayload;
 
-    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
-      res.status(403).json({ status: false, message: "Only admin can view this schedule." });
+    if (
+      decoded.role !== "admin" &&
+      decoded.role !== "super_admin" &&
+      decoded.role !== "guru"
+    ) {
+      res
+        .status(403)
+        .json({ status: false, message: "Only admin can view this schedule." });
       return;
     }
 
@@ -33,12 +42,16 @@ class GetJadwalByIdController extends AuthMiddleWare {
         where: { id_jadwal: Number(id) },
         include: {
           kelas: true,
-          guru: true,
+          guru: {
+            include: {
+              mapel: true,
+            },
+          },
           ruang: {
-            include : {
-              jurusan: true
-            }
-          }
+            include: {
+              jurusan: true,
+            },
+          },
         },
       });
 
@@ -49,7 +62,13 @@ class GetJadwalByIdController extends AuthMiddleWare {
 
       res.status(200).json({ status: true, data });
     } catch (error) {
-      res.status(500).json({ status: false, message: "Failed to retrieve schedule.", error: (error as Error).message });
+      res
+        .status(500)
+        .json({
+          status: false,
+          message: "Failed to retrieve schedule.",
+          error: (error as Error).message,
+        });
     }
   }
 }

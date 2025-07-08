@@ -109,7 +109,7 @@ class RegisterController extends PrismaClient {
         .withMessage("field name cannot be empty!")
         .isLength({ min: 4, max: 50 })
         .withMessage("Username must be between 4 and 50 characters")
-        .matches(/^(?![_ -])(?:(?![_ -]{2})[\w -]){4,50}(?<![_ -])$/)
+        .matches(/^(?![_-])(?!.*[_-]{2})(?!.*[^a-zA-Z0-9 _\-.,]).*(?<![_-])$/)
         .withMessage("Unique characters are not allowed!"),
       check("role")
         .notEmpty()

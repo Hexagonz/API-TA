@@ -127,13 +127,27 @@ model Presensi {
   tanggal     DateTime? @db.DateTime()
   waktu       DateTime? @db.Time()
   hari        Hari?
-  status      Boolean   @default(false)
+  status      keterangan? 
   gambar      String?   @db.VarChar(100)
+  progres     Progres   @default(idle)
+  uploaded_at DateTime @default(now())
 
-  
   
   siswa  Siswa  @relation(fields: [id_siswa], references: [id_siswa], onUpdate: Cascade, onDelete: Cascade)
   jadwal Jadwal @relation(fields: [id_jadwal], references: [id_jadwal], onUpdate: Cascade, onDelete: Cascade)
+}
+
+enum Progres {
+  idle
+  pending
+  success
+}
+
+enum keterangan {
+  masuk
+  izin
+  alpa
+  
 }
 
 enum Hari {

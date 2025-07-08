@@ -15,7 +15,10 @@ class PreparePresensiController extends AuthMiddleWare {
   }
 
   private initializeRoutes(): void {
-    this.protectedRouter.post("/presensi/prepare", this.preparePresensi.bind(this));
+    this.protectedRouter.post(
+      "/presensi/prepare",
+      this.preparePresensi.bind(this)
+    );
   }
 
   private async preparePresensi(req: Request, res: Response): Promise<void> {
@@ -34,78 +37,97 @@ class PreparePresensiController extends AuthMiddleWare {
     }
 
     if (decoded.role !== "guru") {
-      res.status(403).json({ status: false, message: "Only teachers can prepare presensi." });
+      res
+        .status(403)
+        .json({
+          status: false,
+          message: "Hanya guru yang bisa mengatur presensi",
+        });
       return;
     }
 
-    // Konversi hari lokal ke enum Prisma
-    const namaHari = new Date().toLocaleDateString("id-ID", { weekday: "long" });
-    const hariEnum = namaHari.toUpperCase() as keyof typeof $Enums.Hari;
+    const { id_jadwal } = req.body;
+    if (!id_jadwal) {
+      res.status(400).json({ status: false, message: "id_jadwal diperlukan" });
+      return;
+    }
 
-    const tanggalHariIni = new Date();
+    const tanggalSekarang = new Date();
+
+    // Format jam dan tanggal Indonesia (opsional jika mau tampilkan)
+    const jamIndo = tanggalSekarang.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    const tanggalIndo = tanggalSekarang.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
 
     try {
-      // 1. Ambil semua jadwal hari ini milik guru
-      const jadwalHariIni = await this.jadwal.findMany({
-        where: {
-          id_guru: decoded.id,
-          hari: $Enums.Hari[hariEnum], // pastikan enum cocok
+      const jadwal = await this.jadwal.findUnique({
+        where: { id_jadwal },
+        include : {
+          guru: true
         },
+      });
+      if (!jadwal || jadwal.guru.nip !== decoded.username) {
+        res
+          .status(404)
+          .json({
+            status: false,
+            message: "Jadwal tidak ditemukan atau bukan milik guru ini",
+          });
+        return;
+      }
+
+      const siswaKelas = await this.siswa.findMany({
+        where: { id_kelas: jadwal.id_kelas },
       });
 
       let totalPresensiBaru = 0;
 
-      for (const jadwal of jadwalHariIni) {
-        // 2. Ambil data ruang dari jadwal
-        const ruang = await this.ruang_Kelas.findUnique({
-          where: { id_ruang: jadwal.id_kelas },
+      for (const siswa of siswaKelas) {
+        const existingPresensi = await this.presensi.findFirst({
+          where: {
+            id_siswa: siswa.id_siswa,
+            id_jadwal: jadwal.id_jadwal,
+            tanggal: {
+              gte: new Date(tanggalSekarang.setHours(0, 0, 0, 0)),
+              lte: new Date(tanggalSekarang.setHours(23, 59, 59, 999)),
+            },
+          },
         });
 
-        if (!ruang) continue;
-
-        const siswaKelas = await this.siswa.findMany({
-          where: { id_kelas: jadwal.id_kelas },
-        });
-
-        for (const siswa of siswaKelas) {
-          const existingPresensi = await this.presensi.findFirst({
-            where: {
+        if (!existingPresensi) {
+          await this.presensi.create({
+            data: {
               id_siswa: siswa.id_siswa,
               id_jadwal: jadwal.id_jadwal,
-              tanggal: {
-                gte: new Date(tanggalHariIni.setHours(0, 0, 0, 0)),
-                lte: new Date(tanggalHariIni.setHours(23, 59, 59, 999)),
-              },
+              hari: jadwal.hari,
+              tanggal: new Date(), 
+              status: undefined,
+              gambar: "",
+              keterangan: "",
+              progres: "idle"
             },
           });
-
-          if (!existingPresensi) {
-            await this.presensi.create({
-              data: {
-                id_siswa: siswa.id_siswa,
-                id_jadwal: jadwal.id_jadwal,
-                hari: jadwal.hari,
-                tanggal: new Date(),
-                status: false,
-                gambar: "",
-                keterangan: "",
-              },
-            });
-            totalPresensiBaru++;
-          }
+          totalPresensiBaru++;
         }
       }
 
       res.status(200).json({
         status: true,
-        message: `Presensi generated successfully for today.`,
+        message: `Presensi berhasil disiapkan pada ${tanggalIndo} jam ${jamIndo}.`,
         data: { count: totalPresensiBaru },
       });
     } catch (err) {
       console.error(err);
       res.status(500).json({
         status: false,
-        message: "Server error",
+        message: "Terjadi kesalahan server",
         error: (err as Error).message,
       });
     }

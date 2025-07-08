@@ -25,7 +25,11 @@ class GetJadwalController extends AuthMiddleWare {
       this.privateKey
     ) as JwtPayload;
 
-    if (decoded.role !== "admin" && decoded.role !== "super_admin") {
+    if (
+      decoded.role !== "admin" &&
+      decoded.role !== "super_admin" &&
+      decoded.role !== "guru"
+    ) {
       res
         .status(403)
         .json({ status: false, message: "Only admin can view schedules." });
@@ -42,27 +46,25 @@ class GetJadwalController extends AuthMiddleWare {
             },
           },
           ruang: {
-            include : {
-              jurusan: true
-            }
-          }
+            include: {
+              jurusan: true,
+            },
+          },
         },
+        orderBy: [{ hari: "asc" }, { jam_mulai: "asc" }],
       });
-      res
-        .status(200)
-        .json({
-          status: true,
-          message: "Berhasil mengambil data Jadwal",
-          data,
-        });
+
+      res.status(200).json({
+        status: true,
+        message: "Berhasil mengambil data Jadwal",
+        data,
+      });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          status: false,
-          message: "Failed to retrieve schedules.",
-          error: (error as Error).message,
-        });
+      res.status(500).json({
+        status: false,
+        message: "Failed to retrieve schedules.",
+        error: (error as Error).message,
+      });
     }
   }
 }
